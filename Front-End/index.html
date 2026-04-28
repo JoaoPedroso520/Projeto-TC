@@ -898,9 +898,11 @@
             color: #00cc00;
         }
 
-        #modal-body p {
+        #modal-body .modal-conteudo {
             line-height: 1.8;
             color: #ddd;
+            white-space: pre-line;
+            display: block;
         }
 
         /* FOOTER */
@@ -1620,7 +1622,7 @@
                     <span><i class="fas fa-user"></i> ${autor}</span>
                     <span><i class="fas fa-eye"></i> ${views} views</span>
                 </div>
-                <p>${conteudo}</p>
+                <div class="modal-conteudo">${conteudo}</div>
             `;
             document.getElementById('modal').classList.add('active');
             document.body.classList.add('modal-open');
