@@ -2,6 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const connectDB = require('./config/database');
 const User = require('./models/User');
 
@@ -21,9 +22,6 @@ async function garantirAdminPadrao() {
   }
 }
 
-// Conectar ao banco de dados
-connectDB().then(garantirAdminPadrao);
-
 const app = express();
 
 // Middlewares
@@ -38,9 +36,20 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/utils', require('./routes/utils'));
 app.use('/api/categorias', require('./routes/categorias'));
 
+// Rota raiz
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    mensagem: 'API C7 Noticias rodando',
+  });
+});
+
 // Rota de teste
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Backend funcionando!' });
+  res.json({
+    status: 'ok',
+    database: 'connected',
+  });
 });
 
 // Erro 404
@@ -48,8 +57,20 @@ app.use((req, res) => {
   res.status(404).json({ erro: 'Rota não encontrada' });
 });
 
-// Iniciar servidor
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+
+async function startServer() {
+  try {
+    await connectDB();
+    await garantirAdminPadrao();
+
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+  } catch (erro) {
+    console.error('Falha ao iniciar servidor:', erro.message);
+    process.exit(1);
+  }
+}
+
+startServer();
