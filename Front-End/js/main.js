@@ -1,7 +1,5 @@
 // Configuração da API
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api'
-    : 'https://c7-noticias-backend.onrender.com/api';
+const API_URL = 'https://c7-noticias-backend.onrender.com/api';
 let noticiaAtual = null;
 
 // Elementos do DOM
