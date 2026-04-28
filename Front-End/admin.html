@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/x-icon" href="img/C7.png">
     <title>Admin - C7 Notícias</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -565,15 +565,25 @@
         }
 
         /* TABELA */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 20px;
+            padding-bottom: 8px;
+        }
+
         table {
             width: 100%;
+            min-width: 760px;
             border-collapse: collapse;
             background: #1a1a1a;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 204, 0, 0.2);
             border: 2px solid #00cc00;
-            margin-top: 20px;
+            margin-top: 0;
         }
 
         th {
@@ -745,6 +755,10 @@
                 font-size: 12px;
             }
 
+            .table-scroll {
+                margin-top: 18px;
+            }
+
             th,
             td {
                 padding: 12px;
@@ -890,7 +904,7 @@
                 </form>
             </div>
 
-            <div style="margin-top: 30px;">
+            <div class="table-scroll">
                 <table>
                     <thead>
                         <tr>
@@ -976,7 +990,7 @@
                 </form>
             </div>
 
-            <div style="margin-top: 30px;">
+            <div class="table-scroll">
                 <table>
                     <thead>
                         <tr>
