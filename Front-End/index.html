@@ -88,6 +88,39 @@
             flex-wrap: wrap;
         }
 
+        .menu-mobile-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(0, 204, 0, 0.45);
+            background: rgba(0, 0, 0, 0.45);
+            color: #00cc00;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        .menu-mobile-toggle:hover {
+            background: rgba(0, 204, 0, 0.15);
+        }
+
+        .menu-close-btn {
+            display: none;
+            align-self: flex-end;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(0, 204, 0, 0.45);
+            background: rgba(0, 0, 0, 0.45);
+            color: #00cc00;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
         .menu-categorias {
             display: flex;
             gap: 6px;
@@ -141,7 +174,7 @@
             align-items: center;
             gap: 6px;
             padding: 5px;
-            border-radius: 999px;
+            border-radius: 10px;
             border: 1px solid rgba(0, 204, 0, 0.4);
             background: rgba(0, 0, 0, 0.35);
             flex: 1 1 260px;
@@ -182,6 +215,24 @@
             cursor: pointer;
             transition: background-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
             white-space: nowrap;
+        }
+
+        .busca-limpar {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #d7e3d7;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .busca-limpar.visivel {
+            display: flex;
         }
 
         .busca-container button:hover {
@@ -1002,28 +1053,52 @@
         /* RESPONSIVO */
         @media (max-width: 768px) {
             .header-content {
-                flex-direction: column;
-                gap: 15px;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .menu-mobile-toggle {
+                display: flex;
             }
 
             .menu-principal {
+                display: none;
                 width: 100%;
                 flex-direction: column;
+                grid-column: 1 / -1;
+                padding: 14px;
+                border: 1px solid rgba(0, 204, 0, 0.24);
+                background: rgba(6, 9, 14, 0.96);
+                border-radius: 12px;
+            }
+
+            .menu-principal.menu-aberto {
+                display: flex;
+            }
+
+            .menu-close-btn {
+                display: flex;
             }
 
             .menu-link {
                 width: 100%;
                 justify-content: center;
+                border-radius: 8px;
             }
 
             .menu-categorias {
                 width: 100%;
-                justify-content: center;
+                justify-content: stretch;
+                flex-direction: column;
             }
 
             .busca-container {
                 width: 100%;
                 max-width: 100%;
+                border-radius: 8px;
+                padding: 4px;
             }
 
             .noticias-grid {
@@ -1052,16 +1127,40 @@
             header {
                 padding: 10px 12px;
             }
+
+            .logo img {
+                height: 26px;
+                max-width: 120px;
+            }
+
             .menu-link {
                 font-size: 12px;
                 padding: 9px 12px;
             }
+
             .busca-container {
-                padding: 6px;
+                min-height: 46px;
+                gap: 4px;
             }
+
+            .busca-container input {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
             .busca-container button {
-                padding: 8px 12px;
-                font-size: 12px;
+                padding: 10px 12px;
+                font-size: 0;
+                border-radius: 8px;
+            }
+
+            .busca-container button i {
+                font-size: 14px;
+            }
+
+            .busca-limpar {
+                width: 36px;
+                height: 36px;
             }
             .section-block {
                 padding: 24px 0;
@@ -1139,12 +1238,23 @@
             <div class="logo">
                 <img src="img/Logo.png" alt="Logo">
             </div>
-            <nav class="menu-principal">
-                <button class="menu-link" onclick="carregarTodas()"><i class="fas fa-home"></i> Home</button>
+            <button class="menu-mobile-toggle" type="button" aria-label="Abrir menu" onclick="toggleMenuMobile()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav class="menu-principal" id="menuPrincipal">
+                <button class="menu-close-btn" type="button" aria-label="Fechar menu" onclick="fecharMenuMobile()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="menu-link" onclick="carregarTodas(); fecharMenuMobile()"><i class="fas fa-home"></i> Home</button>
                 <div class="menu-categorias" id="menu-categorias"></div>
                 <div class="busca-container">
                     <input type="text" id="buscaInput" placeholder="Buscar notícias..."
+                        oninput="atualizarBotaoLimparBusca()"
                         onkeypress="if(event.key==='Enter') fazerBusca()">
+                    <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
+                        onclick="limparBusca()">
+                        <i class="fas fa-times"></i>
+                    </button>
                     <button onclick="fazerBusca()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
             </nav>
@@ -1564,7 +1674,10 @@
                 btn.className = 'menu-link menu-categoria';
                 btn.dataset.categoria = categoria;
                 btn.innerHTML = `<i class="fas ${getCategoriaIcon(categoria)}"></i> ${categoria}`;
-                btn.addEventListener('click', () => carregarPorCategoria(categoria));
+                btn.addEventListener('click', () => {
+                    carregarPorCategoria(categoria);
+                    fecharMenuMobile();
+                });
                 container.appendChild(btn);
             });
         }
@@ -1619,8 +1732,43 @@
             });
         }
 
+        function toggleMenuMobile() {
+            const menu = document.getElementById('menuPrincipal');
+            if (!menu) return;
+            menu.classList.toggle('menu-aberto');
+        }
+
+        function fecharMenuMobile() {
+            const menu = document.getElementById('menuPrincipal');
+            if (!menu) return;
+            menu.classList.remove('menu-aberto');
+        }
+
+        function atualizarBotaoLimparBusca() {
+            const input = document.getElementById('buscaInput');
+            const botao = document.getElementById('buscaLimparBtn');
+            if (!input || !botao) return;
+            botao.classList.toggle('visivel', Boolean(input.value.trim()));
+        }
+
+        function limparBusca() {
+            const input = document.getElementById('buscaInput');
+            if (!input) return;
+            input.value = '';
+            atualizarBotaoLimparBusca();
+            input.focus();
+        }
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') fecharModal();
+            if (e.key === 'Escape') {
+                fecharModal();
+                fecharMenuMobile();
+            }
+        });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                fecharMenuMobile();
+            }
         });
         const modalOverlay = document.getElementById('modal');
         if (modalOverlay) {
@@ -1643,6 +1791,8 @@
                 const noticias = await res.json();
                 exibir(noticias);
                 document.getElementById('buscaInput').value = '';
+                atualizarBotaoLimparBusca();
+                fecharMenuMobile();
             } catch (e) {
                 console.error('Erro na busca:', e);
             }
@@ -1920,6 +2070,7 @@
         // Carrega as notícias quando a página abre
         window.addEventListener('load', () => {
             console.log('Página carregada, iniciando carregamento de notícias e banners...');
+            atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
             carregarTodas();
             carregarAnuncios();
@@ -1936,3 +2087,5 @@
 </body>
 
 </html>
+
+
