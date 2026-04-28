@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/Logo.png">
+    <title>Admin - C7 Notícias</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* LOGIN PAGE */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            background: #000;
+        }
+
+        .login-container.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 204, 0, 0.2);
+            border: 2px solid #00cc00;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-box h1 {
+            color: #00cc00;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-box h1 i {
+            color: #00ff00;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #00cc00;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            padding: 12px;
+            background: #0d0d0d;
+            border: 2px solid #00cc00;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #00cc00;
+            border-color: #00ff00;
+        }
+
+        .btn-login {
+            padding: 12px;
+            background: #00cc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            background: #00ff00;
+            transform: translateY(-2px);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            color: #ff6b6b;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* TOGGLE SENHA */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-container input {
+            width: 100%;
+            padding-right: 42px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            cursor: pointer;
+            color: #00cc00;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .toggle-password:hover {
+            color: #00ff00;
+        }
+
+        .toggle-password.active {
+            color: #ffcc00;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container.hidden {
+            display: none;
+        }
+
+        /* NOTIFICAÇÕES */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .notification {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0, 204, 0, 0.3);
+            animation: slideInRight 0.3s ease;
+            color: white;
+            font-weight: 500;
+            border-left: 4px solid #00cc00;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .notification.removing {
+            animation: slideOutRight 0.3s ease;
+        }
+
+        .notification-success {
+            background: #1a4d2e;
+            border-left-color: #00cc00;
+        }
+
+        .notification-error {
+            background: #4d1a1a;
+            border-left-color: #ff6b6b;
+        }
+
+        .notification-warning {
+            background: #4d3a1a;
+            border-left-color: #ffa631;
+        }
+
+        .notification-info {
+            background: #1a3a4d;
+            border-left-color: #667eea;
+        }
+
+        .notification i {
+            font-size: 18px;
+        }
+
+        .notification-close {
+            cursor: pointer;
+            margin-left: auto;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .notification-close:hover {
+            opacity: 1;
+        }
+
+        /* HEADER */
+        header {
+            background: #000;
+            color: white;
+            padding: 20px calc(20px + (50vw - 50%));
+            margin: 0 calc(50% - 50vw);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 204, 0, 0.2);
+            border-bottom: 2px solid #00cc00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        header h1 {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            line-height: 1;
+        }
+        .admin-logo {
+            height: 42px;
+            width: auto;
+            max-width: 180px;
+            object-fit: contain;
+            display: block;
+        }
+
+        header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        header .btn-logout {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        header .btn-logout:hover {
+            background: #ff5252;
+        }
+
+        /* MENU */
+        .menu {
+            display: flex;
+            gap: 12px;
+            margin: 30px calc(50% - 50vw);
+            padding: 0 calc(20px + (50vw - 50%));
+            flex-wrap: wrap;
+        }
+
+        .menu-btn {
+            padding: 12px 24px;
+            background: #1a1a1a;
+            border: 2px solid #00cc00;
+            color: #00cc00;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-btn:hover {
+            background: #00cc00;
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        .menu-btn.active {
+            background: #00cc00;
+            color: #000;
+        }
+
+        .menu-btn i {
+            font-size: 16px;
+        }
+
+        /* SEÇÕES */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #00cc00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* BOTÃO PRINCIPAL */
+        .btn-add {
+            padding: 12px 24px;
+            background: #00cc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-add:hover {
+            background: #00ff00;
+            transform: translateY(-2px);
+        }
+
+        /* FORMULÁRIO */
+        .form-card {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: none !important;
+            border: 2px solid #00cc00;
+        }
+
+        .form-card.visible {
+            display: block !important;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card h3 {
+            margin-bottom: 20px;
+            color: #00cc00;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #00cc00;
+            font-size: 14px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #00cc00;
+            background: #0d0d0d;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 0 4px rgba(0, 204, 0, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .categoria-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-icon {
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            background: #00cc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: #00ff00;
+            transform: translateY(-1px);
+        }
+
+        .categoria-nova {
+            display: none;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .categoria-nova input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn-submit {
+            padding: 12px 28px;
+            background: #00cc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: #00ff00;
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            padding: 12px 28px;
+            background: #333;
+            color: #fff;
+            border: 2px solid #666;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #444;
+        }
+
+        /* TABELA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 204, 0, 0.2);
+            border: 2px solid #00cc00;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #00cc00;
+            color: #000;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid #333;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: #222;
+        }
+
+        /* STATUS */
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.ativo {
+            background: #1a4d2e;
+            color: #00cc00;
+        }
+
+        .status.inativo {
+            background: #4d1a1a;
+            color: #ff6b6b;
+        }
+
+        /* AÇÕES */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-edit {
+            background: #00cc00;
+            color: #000;
+        }
+
+        .btn-edit:hover {
+            background: #00ff00;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 204, 0, 0.3);
+            border: 2px solid #00cc00;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 12px;
+            color: #00cc00;
+            font-size: 18px;
+        }
+
+        .modal-content p {
+            color: #ddd;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .modal-button-confirm {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .modal-button-confirm:hover {
+            background: #ff5252;
+        }
+
+        .modal-button-cancel {
+            background: #333;
+            color: #fff;
+            border: 2px solid #666;
+        }
+
+        .modal-button-cancel:hover {
+            background: #444;
+        }
+
+        @media (max-width: 768px) {
+            .menu {
+                flex-direction: column;
+            }
+
+            .menu-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 12px;
+            }
+
+            input,
+            textarea,
+            select {
+                font-size: 16px;
+            }
+
+            header {
+                h1 {
+                    font-size: 18px;
+                }
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN PAGE -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1><i class="fas fa-lock"></i> Acesso Admin</h1>
+            <form class="login-form" onsubmit="fazerLogin(event)">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Usuário</label>
+                    <input type="text" id="loginUser" required placeholder="Seu usuário">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-key"></i> Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="loginPass" required placeholder="Sua senha">
+                        <i class="fas fa-eye toggle-password" id="togglePass" onclick="toggleSenha()"
+                            title="Mostrar senha" aria-label="Mostrar senha"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div class="container hidden" id="adminContainer">
+        <div class="notification-container" id="notificationContainer"></div>
+
+        <header>
+            <h1><img src="img/Logo.png" alt="C7 Noticias" class="admin-logo"></h1>
+            <div class="user-info">
+                <span id="usuarioNome"></span>
+                <button class="btn-logout" onclick="fazerLogout()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            </div>
+        </header>
+
+        <div class="menu">
+            <button class="menu-btn active" onclick="mudarAba('noticias')"><i class="fas fa-newspaper"></i>
+                Notícias</button>
+            <button class="menu-btn" onclick="mudarAba('anuncios')"><i class="fas fa-bullhorn"></i>
+                Anúncios/Banners</button>
+            <a href="index.html" style="text-decoration: none;"><button class="menu-btn" style="cursor: pointer;"><i
+                        class="fas fa-arrow-left"></i> Voltar</button></a>
+        </div>
+
+        <!-- NOTÍCIAS -->
+        <div id="noticias" class="section active">
+            <h2><i class="fas fa-pen-to-square"></i> Gerenciar Notícias</h2>
+            <button class="btn-add" onclick="abrirFormNoticia()"><i class="fas fa-plus"></i> Adicionar Notícia</button>
+
+            <div id="formNoticia" class="form-card">
+                <h3><i class="fas fa-edit"></i> Criar/Editar Notícia</h3>
+                <form onsubmit="salvarNoticia(event)">
+                    <input type="hidden" id="noticiaId">
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Título *</label>
+                        <input type="text" id="noticiaTitulo" required placeholder="Digite o título">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> Categoria *</label>
+                            <div class="categoria-inline">
+                                <select id="noticiaCategoria" required>
+                                    <option value="">Selecione uma categoria</option>
+                                </select>
+                                <button type="button" class="btn-icon" onclick="toggleCategoriaInline(true)"
+                                    title="Adicionar categoria"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <div class="categoria-nova" id="categoriaNova">
+                                <input type="text" id="categoriaNovaInput" placeholder="Nova categoria">
+                                <button type="button" class="btn-submit" onclick="salvarCategoriaInline()"><i
+                                        class="fas fa-save"></i> Salvar</button>
+                                <button type="button" class="btn-cancel" onclick="toggleCategoriaInline(false)"><i
+                                        class="fas fa-times"></i> Cancelar</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Autor</label>
+                            <input type="text" id="noticiaAutor" placeholder="Nome do autor">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Foto *</label>
+                        <button type="button" class="btn-add"
+                            style="width: 100%; margin: 0 0 12px 0; justify-content: center;"
+                            onclick="document.getElementById('noticia-file').click()">
+                            <i class="fas fa-upload"></i> Escolher Imagem
+                        </button>
+                        <input type="file" id="noticia-file" style="display: none;" accept="image/*"
+                            onchange="previewFotoNoticia(event)">
+                        <div id="noticia-preview" style="display: none; margin-bottom: 12px;">
+                            <img id="noticia-preview-img"
+                                style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #00cc00;">
+                        </div>
+                        <input type="url" id="noticiaFoto" placeholder="Ou insira URL da imagem">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-align-left"></i> Conteúdo *</label>
+                        <textarea id="noticiaConteudo" required placeholder="Conteúdo da notícia..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="noticiaAtivo" checked style="width: auto; margin-right: 8px;">
+                            Ativo/Publicado</label>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+                        <button type="button" onclick="fecharFormNoticia()" class="btn-cancel"><i
+                                class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Categoria</th>
+                            <th>Autor</th>
+                            <th>Status</th>
+                            <th>Views</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="noticiasTabela"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ANÚNCIOS -->
+        <div id="anuncios" class="section">
+            <h2><i class="fas fa-bullhorn"></i> Gerenciar Anúncios/Banners</h2>
+            <button class="btn-add" onclick="abrirFormAnuncio()"><i class="fas fa-plus"></i> Novo Anúncio</button>
+
+            <div id="formAnuncio" class="form-card">
+                <h3><i class="fas fa-edit"></i> Criar/Editar Anúncio</h3>
+                <form onsubmit="salvarAnuncio(event)">
+                    <input type="hidden" id="anuncioId">
+                    <div class="form-group">
+                        <label><i class="fas fa-heading"></i> Título *</label>
+                        <input type="text" id="anuncioTitulo" required placeholder="Título do anúncio">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-location-dot"></i> Posição *</label>
+                        <select id="anuncioPosicao" required>
+                            <option value="">Selecione a posição</option>
+                            <option value="topo">Topo (Grande)</option>
+                            <option value="meio">Meio (Grande)</option>
+                            <option value="lateral">Lateral (Sidebar)</option>
+                            <option value="rodape">Rodapé</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-image"></i> Banner/Imagem *</label>
+                        <button type="button" class="btn-add"
+                            style="width: 100%; margin: 0 0 12px 0; justify-content: center;"
+                            onclick="document.getElementById('anuncio-file').click()">
+                            <i class="fas fa-upload"></i> Escolher Imagem
+                        </button>
+                        <input type="file" id="anuncio-file" style="display: none;" accept="image/*"
+                            onchange="previewFotoAnuncio(event)">
+                        <div id="anuncio-preview" style="display: none; margin-bottom: 12px;">
+                            <img id="anuncio-preview-img"
+                                style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid #00cc00;">
+                        </div>
+                        <input type="url" id="anuncioFoto" placeholder="Ou insira URL da imagem">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-link"></i> Link/URL</label>
+                        <input type="url" id="anuncioLink" placeholder="https://exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-stopwatch"></i> Tempo de rotação (segundos)</label>
+                        <input type="number" id="anuncioTempo" min="1" step="1" placeholder="Recomendado: 20">
+                        <small>Ex: recomendado 20 seg. Deixe em branco para manter fixo.</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Data/Hora Início *</label>
+                            <input type="datetime-local" id="anuncioInicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-times"></i> Data/Hora Fim *</label>
+                            <input type="datetime-local" id="anuncioFim" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="anuncioAtivo" checked style="width: auto; margin-right: 8px;">
+                            Ativo/Exibindo</label>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+                        <button type="button" onclick="fecharFormAnuncio()" class="btn-cancel"><i
+                                class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Posição</th>
+                            <th>Período</th>
+                            <th>Status</th>
+                            <th>Cliques</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="anunciosTabela"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL CONFIRMAÇÃO -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirmar</h3>
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button class="modal-button modal-button-confirm" onclick="executarConfirmacao()">Confirmar</button>
+                <button class="modal-button modal-button-cancel" onclick="cancelarConfirmacao()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let confirmCallback = null;
+        let usuarioAutenticado = null;
+
+        // ==== NOTIFICAÇÕES ====
+        function showNotification(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            notification.innerHTML = `
+                <i class="fas ${icons[type]}"></i>
+                <span>${message}</span>
+                <i class="fas fa-times notification-close" onclick="this.parentElement.remove()"></i>
+            `;
+
+            container.appendChild(notification);
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.classList.add('removing');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
+        }
+
+        // ==== TOGGLE SENHA ====
+        function toggleSenha() {
+            const input = document.getElementById('loginPass');
+            const toggle = document.getElementById('togglePass');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.classList.remove('fa-eye');
+                toggle.classList.add('fa-eye-slash');
+                toggle.classList.add('active');
+                toggle.title = 'Ocultar senha';
+                toggle.setAttribute('aria-label', 'Ocultar senha');
+            } else {
+                input.type = 'password';
+                toggle.classList.remove('fa-eye-slash');
+                toggle.classList.add('fa-eye');
+                toggle.classList.remove('active');
+                toggle.title = 'Mostrar senha';
+                toggle.setAttribute('aria-label', 'Mostrar senha');
+            }
+        }
+
+        // ==== LOGIN ====
+        async function fazerLogin(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const loginError = document.getElementById('loginError');
+
+            loginError.textContent = '';
+            btn.disabled = true;
+
+            const usuario = document.getElementById('loginUser').value.trim();
+            const senha = document.getElementById('loginPass').value.trim();
+
+            if (!usuario || !senha) {
+                loginError.textContent = 'Preencha usuário e senha antes de continuar.';
+                showNotification('Preencha usuário e senha.', 'warning', 3000);
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, senha })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.token) {
+                    usuarioAutenticado = { usuario: data.usuario, token: data.token };
+                    localStorage.setItem('adminToken', JSON.stringify(usuarioAutenticado));
+
+                    document.getElementById('loginContainer').classList.add('hidden');
+                    document.getElementById('adminContainer').classList.remove('hidden');
+                    document.getElementById('usuarioNome').textContent = `Bem-vindo, ${data.usuario}!`;
+
+                    showNotification('Login realizado com sucesso.', 'success', 2500);
+
+                    carregarCategorias();
+                    carregarNoticias();
+                    carregarAnuncios();
+                } else {
+                    const mensagemErro = data.erro || (data.mensagem && !res.ok ? data.mensagem : 'Usuário ou senha inválidos');
+                    loginError.textContent = mensagemErro;
+                    showNotification(mensagemErro, 'error', 4000);
+                }
+            } catch (e) {
+                const msg = 'Não foi possível conectar ao servidor de autenticação.';
+                loginError.textContent = msg;
+                showNotification(msg, 'error', 4000);
+                console.error('fazerLogin:', e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // ==== LOGOUT ====
+        function fazerLogout() {
+            localStorage.removeItem('adminToken');
+            usuarioAutenticado = null;
+            document.getElementById('adminContainer').classList.add('hidden');
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').textContent = '';
+            window.location.href = 'index.html';
+        }
+
+        async function verificarSessao() {
+            const tokenData = localStorage.getItem('adminToken');
+            if (!tokenData) return;
+
+            try {
+                const { token, usuario } = JSON.parse(tokenData);
+
+                const res = await fetch(`${API_URL}/auth/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token || '' })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.autenticado) {
+                    usuarioAutenticado = { usuario, token };
+                    document.getElementById('loginContainer').classList.add('hidden');
+                    document.getElementById('adminContainer').classList.remove('hidden');
+                    document.getElementById('usuarioNome').textContent = `Bem-vindo, ${usuario}!`;
+                    carregarCategorias();
+                    carregarNoticias();
+                    carregarAnuncios();
+                } else {
+                    localStorage.removeItem('adminToken');
+                }
+            } catch (err) {
+                console.warn('verificarSessao: falha na verificação de token', err);
+                localStorage.removeItem('adminToken');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarSessao();
+        });
+
+        // ==== VERIFICAR LOGIN ====
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('adminToken');
+            if (saved) {
+                usuarioAutenticado = JSON.parse(saved);
+                document.getElementById('loginContainer').classList.add('hidden');
+                document.getElementById('adminContainer').classList.remove('hidden');
+                document.getElementById('usuarioNome').textContent = `Bem-vindo, ${usuarioAutenticado.usuario}!`;
+                carregarCategorias();
+                carregarNoticias();
+                carregarAnuncios();
+            }
+        });
+
+        // ==== MODAL CONFIRMAÇÃO ====
+        function showConfirmation(message, callback) {
+            confirmCallback = callback;
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function executarConfirmacao() {
+            if (confirmCallback) confirmCallback();
+            cancelarConfirmacao();
+        }
+
+        function cancelarConfirmacao() {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        // ==== ABAS ====
+        function mudarAba(aba) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(aba).classList.add('active');
+            event.target.closest('.menu-btn').classList.add('active');
+        }
+
+        // ==== CATEGORIAS ====
+        async function carregarCategorias() {
+            try {
+                const res = await fetch(`${API_URL}/categorias`);
+                const categorias = await res.json();
+                const lista = (categorias || []).map(c => c.nome || c);
+
+                const select = document.getElementById('noticiaCategoria');
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione uma categoria</option>' +
+                        lista.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+
+                const tbody = document.getElementById('categoriasTabela');
+                if (tbody) {
+                    if (lista.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 20px;">Nenhuma categoria</td></tr>';
+                    } else {
+                        tbody.innerHTML = categorias.map(c => `
+                            <tr>
+                                <td>${c.nome}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-delete" onclick="deletarCategoria('${c._id}', '${c.nome}')"><i class="fas fa-trash"></i> Deletar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('Erro ao carregar categorias', e);
+            }
+        }
+
+        // ==== NOTÍCIAS ====
+        async function carregarNoticias() {
+            try {
+                const res = await fetch(`${API_URL}/noticias`);
+                const noticias = await res.json();
+                const tbody = document.getElementById('noticiasTabela');
+
+                if (!noticias || noticias.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;"><i class="fas fa-newspaper"></i> Nenhuma notícia</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = noticias.map(n => `
+                    <tr>
+                        <td><strong>${n.titulo}</strong></td>
+                        <td>${n.categoria}</td>
+                        <td>${n.autor || 'Admin'}</td>
+                        <td><span class="status ${n.ativo ? 'ativo' : 'inativo'}">${n.ativo ? 'Ativa' : 'Inativa'}</span></td>
+                        <td>${n.views || 0}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-edit" onclick="editarNoticia('${n._id}')"><i class="fas fa-edit"></i> Editar</button>
+                                <button class="btn-small btn-delete" onclick="confirmarDeleteNoticia('${n._id}', '${n.titulo}')"><i class="fas fa-trash"></i> Deletar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                showNotification('Erro ao carregar notícias', 'error');
+            }
+        }
+
+        function abrirFormNoticia() {
+            limparFormNoticia();
+            document.getElementById('formNoticia').classList.add('visible');
+        }
+
+        function fecharFormNoticia() {
+            document.getElementById('formNoticia').classList.remove('visible');
+        }
+
+        function limparFormNoticia() {
+            document.getElementById('noticiaId').value = '';
+            document.getElementById('noticiaTitulo').value = '';
+            document.getElementById('noticiaCategoria').value = '';
+            document.getElementById('noticiaAutor').value = '';
+            document.getElementById('noticiaFoto').value = '';
+            document.getElementById('noticia-preview').style.display = 'none';
+            document.getElementById('noticiaConteudo').value = '';
+            document.getElementById('noticiaAtivo').checked = true;
+        }
+
+        async function editarNoticia(id) {
+            try {
+                const res = await fetch(`${API_URL}/noticias/${id}`);
+                const n = await res.json();
+
+                document.getElementById('noticiaId').value = n._id;
+                document.getElementById('noticiaTitulo').value = n.titulo;
+                document.getElementById('noticiaCategoria').value = n.categoria;
+                document.getElementById('noticiaAutor').value = n.autor || '';
+                document.getElementById('noticiaFoto').value = n.foto;
+                document.getElementById('noticiaConteudo').value = n.conteudo;
+                document.getElementById('noticiaAtivo').checked = n.ativo;
+                document.getElementById('formNoticia').classList.add('visible');
+
+                document.getElementById('formNoticia').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (e) {
+                showNotification('Erro ao carregar notícia', 'error');
+            }
+        }
+
+        function previewFotoNoticia(event) {
+            const file = event.target.files[0];
+            if (file && file.size < 5 * 1024 * 1024) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('noticia-preview-img').src = e.target.result;
+                    document.getElementById('noticia-preview').style.display = 'block';
+                    document.getElementById('noticiaFoto').value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function salvarNoticia(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+
+            const dados = {
+                titulo: document.getElementById('noticiaTitulo').value,
+                categoria: document.getElementById('noticiaCategoria').value,
+                autor: document.getElementById('noticiaAutor').value,
+                foto: document.getElementById('noticiaFoto').value,
+                conteudo: document.getElementById('noticiaConteudo').value,
+                ativo: document.getElementById('noticiaAtivo').checked
+            };
+
+            const id = document.getElementById('noticiaId').value;
+
+            try {
+                const res = await fetch(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                if (res.ok) {
+                    showNotification(id ? 'Notícia atualizada!' : 'Notícia criada!', 'success');
+                    fecharFormNoticia();
+                    carregarNoticias();
+                } else {
+                    showNotification('Erro ao salvar', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function confirmarDeleteNoticia(id, titulo) {
+            showConfirmation(`Deletar "${titulo}"?`, () => deletarNoticia(id));
+        }
+
+        async function deletarNoticia(id) {
+            try {
+                const res = await fetch(`${API_URL}/noticias/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showNotification('Notícia deletada!', 'success');
+                    carregarNoticias();
+                } else {
+                    showNotification('Erro ao deletar', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro', 'error');
+            }
+        }
+
+        // ==== ANÚNCIOS ====
+        async function carregarAnuncios() {
+            try {
+                const res = await fetch(`${API_URL}/anuncios/admin/todos`);
+                const anuncios = await res.json();
+                const tbody = document.getElementById('anunciosTabela');
+
+                if (!anuncios || anuncios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;"><i class="fas fa-bullhorn"></i> Nenhum anúncio</td></tr>';
+                    return;
+                }
+
+                const posicoes = { topo: 'Topo', meio: 'Meio', lateral: 'Lateral', rodape: 'Rodapé' };
+                tbody.innerHTML = anuncios.map(a => {
+                    const inicio = new Date(a.dataInicio).toLocaleDateString('pt-BR');
+                    const fim = new Date(a.dataFim).toLocaleDateString('pt-BR');
+                    return `
+                    <tr>
+                        <td><strong>${a.titulo}</strong></td>
+                        <td>${posicoes[a.posicao] || a.posicao}</td>
+                        <td>${inicio} a ${fim}</td>
+                        <td><span class="status ${a.ativo ? 'ativo' : 'inativo'}">${a.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                        <td>${a.cliques || 0}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-edit" onclick="editarAnuncio('${a._id}')"><i class="fas fa-edit"></i> Editar</button>
+                                <button class="btn-small btn-delete" onclick="confirmarDeleteAnuncio('${a._id}', '${a.titulo}')"><i class="fas fa-trash"></i> Deletar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            } catch (e) {
+                showNotification('Erro ao carregar anúncios', 'error');
+            }
+        }
+
+        function abrirFormAnuncio() {
+            limparFormAnuncio();
+            document.getElementById('formAnuncio').classList.add('visible');
+        }
+
+        function fecharFormAnuncio() {
+            document.getElementById('formAnuncio').classList.remove('visible');
+        }
+
+        function limparFormAnuncio() {
+            document.getElementById('anuncioId').value = '';
+            document.getElementById('anuncioTitulo').value = '';
+            document.getElementById('anuncioPosicao').value = '';
+            document.getElementById('anuncioFoto').value = '';
+            document.getElementById('anuncio-preview').style.display = 'none';
+            document.getElementById('anuncioLink').value = '';
+            document.getElementById('anuncioTempo').value = '';
+            document.getElementById('anuncioAtivo').checked = true;
+        }
+
+        async function editarAnuncio(id) {
+            try {
+                const res = await fetch(`${API_URL}/anuncios/admin/todos`);
+                const anuncios = await res.json();
+                const a = anuncios.find(x => x._id === id);
+
+                if (a) {
+                    document.getElementById('anuncioId').value = a._id;
+                    document.getElementById('anuncioTitulo').value = a.titulo;
+                    document.getElementById('anuncioPosicao').value = a.posicao;
+                    document.getElementById('anuncioFoto').value = a.foto;
+                    document.getElementById('anuncioLink').value = a.link || '';
+                    document.getElementById('anuncioTempo').value = a.tempoRotacaoSeg ? a.tempoRotacaoSeg : '';
+                    document.getElementById('anuncioInicio').value = new Date(a.dataInicio).toISOString().slice(0, 16);
+                    document.getElementById('anuncioFim').value = new Date(a.dataFim).toISOString().slice(0, 16);
+                    document.getElementById('anuncioAtivo').checked = a.ativo;
+                    document.getElementById('formAnuncio').classList.add('visible');
+                    document.getElementById('formAnuncio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } catch (e) {
+                showNotification('Erro ao carregar anúncio', 'error');
+            }
+        }
+
+        function previewFotoAnuncio(event) {
+            const file = event.target.files[0];
+            if (file && file.size < 5 * 1024 * 1024) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('anuncio-preview-img').src = e.target.result;
+                    document.getElementById('anuncio-preview').style.display = 'block';
+                    document.getElementById('anuncioFoto').value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function salvarAnuncio(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+
+            const dados = {
+                titulo: document.getElementById('anuncioTitulo').value,
+                posicao: document.getElementById('anuncioPosicao').value,
+                foto: document.getElementById('anuncioFoto').value,
+                link: document.getElementById('anuncioLink').value || '#',
+                dataInicio: document.getElementById('anuncioInicio').value,
+                dataFim: document.getElementById('anuncioFim').value,
+                ativo: document.getElementById('anuncioAtivo').checked
+            };
+
+            const tempoRotacaoSeg = document.getElementById('anuncioTempo').value;
+            dados.tempoRotacaoSeg = tempoRotacaoSeg ? Number(tempoRotacaoSeg) : null;
+
+            const id = document.getElementById('anuncioId').value;
+
+            try {
+                const res = await fetch(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                if (res.ok) {
+                    showNotification(id ? 'Anúncio atualizado!' : 'Anúncio criado!', 'success');
+                    fecharFormAnuncio();
+                    carregarAnuncios();
+                } else {
+                    showNotification('Erro ao salvar', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function confirmarDeleteAnuncio(id, titulo) {
+            showConfirmation(`Deletar "${titulo}"?`, () => deletarAnuncio(id));
+        }
+
+        async function deletarAnuncio(id) {
+            try {
+                const res = await fetch(`${API_URL}/anuncios/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showNotification('Anúncio deletado!', 'success');
+                    carregarAnuncios();
+                } else {
+                    showNotification('Erro ao deletar', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro', 'error');
+            }
+        }
+
+        // ==== CATEGORIAS ====
+        async function salvarCategoria(e) {
+            e.preventDefault();
+            const input = document.getElementById('categoriaNome');
+            const nome = input.value.trim();
+            if (!nome) return;
+
+            try {
+                const res = await fetch(`${API_URL}/categorias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome })
+                });
+
+                if (res.ok) {
+                    showNotification('Categoria adicionada!', 'success');
+                    input.value = '';
+                    carregarCategorias();
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showNotification(data.erro || 'Erro ao adicionar categoria', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro: ' + e.message, 'error');
+            }
+        }
+
+        function deletarCategoria(id, nome) {
+            showConfirmation(`Deletar categoria "${nome}"?`, async () => {
+                try {
+                    const res = await fetch(`${API_URL}/categorias/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        showNotification('Categoria deletada!', 'success');
+                        carregarCategorias();
+                    } else {
+                        showNotification('Erro ao deletar categoria', 'error');
+                    }
+                } catch (e) {
+                    showNotification('Erro', 'error');
+                }
+            });
+        }
+
+        function toggleCategoriaInline(mostrar) {
+            const box = document.getElementById('categoriaNova');
+            const input = document.getElementById('categoriaNovaInput');
+            if (!box || !input) return;
+            box.style.display = mostrar ? 'flex' : 'none';
+            if (mostrar) {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        async function salvarCategoriaInline() {
+            const input = document.getElementById('categoriaNovaInput');
+            const select = document.getElementById('noticiaCategoria');
+            if (!input || !select) return;
+            const nome = input.value.trim();
+            if (!nome) return;
+
+            try {
+                const res = await fetch(`${API_URL}/categorias`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome })
+                });
+
+                if (res.ok) {
+                    showNotification('Categoria adicionada!', 'success');
+                    await carregarCategorias();
+                    select.value = nome;
+                    toggleCategoriaInline(false);
+                } else {
+                    const data = await res.json().catch(() => ({}));
+                    showNotification(data.erro || 'Erro ao adicionar categoria', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro: ' + e.message, 'error');
+            }
+        }
+
+    </script>
+</body>
+
+</html>
+
