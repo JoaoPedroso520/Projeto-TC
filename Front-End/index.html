@@ -3,10 +3,28 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="icon" type="image/x-icon" href="img/C7.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="C7 Notícias: portal de notícias do Vale do Ivaí com informação clara, rápida e organizada.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#050806">
+    <meta property="og:title" content="C7 Notícias">
+    <meta property="og:description"
+        content="Portal de notícias do Vale do Ivaí com informação clara, rápida e organizada.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="img/Logo.png">
+    <link rel="preconnect" href="https://c7-noticias-backend.onrender.com">
+    <link rel="dns-prefetch" href="//c7-noticias-backend.onrender.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="//api.open-meteo.com">
+    <link rel="dns-prefetch" href="//servicebus2.caixa.gov.br">
+    <link rel="icon" type="image/png" href="img/C7.png">
     <title>C7 Notícias</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </noscript>
     <style>
         * {
             margin: 0;
@@ -19,6 +37,18 @@
             background: linear-gradient(135deg, #0a0f17 0%, #161b24 100%);
             color: #ebeef2;
             min-height: 100vh;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         /* HEADER */
@@ -755,6 +785,11 @@
             border-color: #00ff00;
         }
 
+        .noticia-card:focus-visible {
+            outline: 3px solid #00ff00;
+            outline-offset: 3px;
+        }
+
         .noticia-imagem {
             width: 100%;
             height: 200px;
@@ -862,6 +897,8 @@
             justify-content: center;
             border-radius: 999px;
             background: rgba(0, 0, 0, 0.35);
+            border: 0;
+            line-height: 1;
         }
 
         .close:hover {
@@ -1265,10 +1302,11 @@
 </head>
 
 <body>
+    <h1 class="sr-only">C7 Notícias</h1>
     <header>
         <div class="header-content">
             <div class="logo">
-                <img src="img/Logo.png" alt="Logo">
+                <img src="img/Logo.png" alt="Logo" width="160" height="32" fetchpriority="high" decoding="async">
             </div>
             <button class="menu-mobile-toggle" type="button" aria-label="Abrir menu" onclick="toggleMenuMobile()">
                 <i class="fas fa-bars"></i>
@@ -1280,7 +1318,7 @@
                 <button class="menu-link" onclick="carregarTodas(); fecharMenuMobile()"><i class="fas fa-home"></i> Home</button>
                 <div class="menu-categorias" id="menu-categorias"></div>
                 <div class="busca-container">
-                    <input type="text" id="buscaInput" placeholder="Buscar notícias..."
+                    <input type="text" id="buscaInput" placeholder="Buscar notícias..." aria-label="Buscar notícias"
                         oninput="atualizarBotaoLimparBusca()"
                         onkeypress="if(event.key==='Enter') fazerBusca()">
                     <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
@@ -1296,7 +1334,7 @@
     <section class="section-block">
         <div class="section-inner">
             <div class="banner" id="banner-topo">
-                <img src="https://via.placeholder.com/1200x200?text=Banner+Publicitario" alt="Banner"
+                <img src="img/Logo.png" alt="Banner" width="1200" height="200" fetchpriority="low" decoding="async"
                     onclick="redirecionarBanner('#')">
             </div>
         </div>
@@ -1319,7 +1357,7 @@
     <section class="section-block">
         <div class="section-inner">
             <div class="banner-meio" id="banner-meio">
-                <img src="https://via.placeholder.com/1200x200?text=Banner+Publicitario+Meio" alt="Banner Meio"
+                <img src="img/Logo.png" alt="Banner Meio" width="1200" height="200" loading="lazy" decoding="async"
                     onclick="redirecionarBanner('#')">
             </div>
         </div>
@@ -1363,15 +1401,15 @@
     <section class="section-block">
         <div class="section-inner">
             <div class="banner-rodape" id="banner-rodape">
-                <img src="https://via.placeholder.com/1200x200?text=Banner+Publicitario+Rodape" alt="Banner Rodapé"
+                <img src="img/Logo.png" alt="Banner Rodapé" width="1200" height="200" loading="lazy" decoding="async"
                     onclick="redirecionarBanner('#')">
             </div>
         </div>
     </section>
 
     <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModal()"><i class="fas fa-times"></i></span>
+        <div class="modal-content" role="dialog" aria-modal="true" aria-label="Notícia">
+            <button class="close" type="button" aria-label="Fechar notícia" onclick="fecharModal()"><i class="fas fa-times"></i></button>
             <div id="modal-body"></div>
         </div>
     </div>
@@ -1379,7 +1417,7 @@
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <div class="footer-logo">
-                    <img src="img/Logo.png" alt="C7 Notícias">
+                    <img src="img/Logo.png" alt="C7 Notícias" width="160" height="32" loading="lazy" decoding="async">
                     <span></span>
                 </div>
                 <p class="footer-text">Seu portal de notícias confiável no Vale do Ivaí. Informação clara, rápida
@@ -1398,15 +1436,15 @@
                 <h4>Redes Sociais</h4>
                 <!-- ALTERAR NOME REDE SOCIAL AQUI -->
                 <div class="social-links">
-                    <a class="social-link instagram" href="https://instagram.com" target="_blank" title="Instagram"><i
+                    <a class="social-link instagram" href="https://instagram.com" target="_blank" rel="noopener noreferrer" title="Instagram"><i
                             class="fab fa-instagram"></i><span>Instagram</span></a>
-                    <a class="social-link facebook" href="https://facebook.com" target="_blank" title="Facebook"><i
+                    <a class="social-link facebook" href="https://facebook.com" target="_blank" rel="noopener noreferrer" title="Facebook"><i
                             class="fab fa-facebook"></i><span>Facebook</span></a>
-                    <a class="social-link twitter" href="https://twitter.com" target="_blank" title="Twitter"><i
+                    <a class="social-link twitter" href="https://twitter.com" target="_blank" rel="noopener noreferrer" title="Twitter"><i
                             class="fab fa-twitter"></i><span>Twitter</span></a>
-                    <a class="social-link youtube" href="https://youtube.com" target="_blank" title="YouTube"><i
+                    <a class="social-link youtube" href="https://youtube.com" target="_blank" rel="noopener noreferrer" title="YouTube"><i
                             class="fab fa-youtube"></i><span>YouTube</span></a>
-                    <a class="social-link whatsapp" href="https://whatsapp.com" target="_blank" title="WhatsApp"><i
+                    <a class="social-link whatsapp" href="https://whatsapp.com" target="_blank" rel="noopener noreferrer" title="WhatsApp"><i
                             class="fab fa-whatsapp"></i><span>WhatsApp</span></a>
                 </div>
             </div>
@@ -1420,6 +1458,35 @@
     <script>
         const API_URL = 'https://c7-noticias-backend.onrender.com/api';
         const anunciosIntervalos = {};
+        const CACHE_TTL_MS = 5 * 60 * 1000;
+        const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
+        const CATEGORIAS_CACHE_KEY = 'c7-categorias-cache';
+
+        function getCache(key) {
+            try {
+                const raw = sessionStorage.getItem(key);
+                if (!raw) return null;
+                const cached = JSON.parse(raw);
+                if (!cached || Date.now() - cached.time > CACHE_TTL_MS) return null;
+                return cached.data;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setCache(key, data) {
+            try {
+                sessionStorage.setItem(key, JSON.stringify({ time: Date.now(), data }));
+            } catch (e) {
+                console.warn('Cache local indisponível:', e);
+            }
+        }
+
+        function carregarImagemFallback(img, fallback) {
+            if (!img || img.dataset.fallbackApplied === 'true') return;
+            img.dataset.fallbackApplied = 'true';
+            img.src = fallback || 'img/Logo.png';
+        }
 
         function limparRotacao(containerId) {
             if (anunciosIntervalos[containerId]) {
@@ -1436,8 +1503,8 @@
                 return;
             }
             container.innerHTML = `
-                <a href="${anuncio.link}" target="_blank" onclick="registrarClique('${anuncio._id}')">
-                    <img src="${anuncio.foto}" alt="${anuncio.titulo}" onerror="this.src='${placeholder}'">
+                <a href="${anuncio.link}" target="_blank" rel="noopener noreferrer" onclick="registrarClique('${anuncio._id}')">
+                    <img src="${anuncio.foto}" alt="${anuncio.titulo}" width="1200" height="200" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, '${placeholder}')">
                 </a>
             `;
         }
@@ -1456,8 +1523,8 @@
             if (!container) return;
             const visible = getCyclicSlice(anuncios, startIndex, Math.min(3, anuncios.length));
             container.innerHTML = visible.map(a => `
-                <a href="${a.link}" target="_blank" onclick="registrarClique('${a._id}')">
-                    <img src="${a.foto}" alt="${a.titulo}" onerror="this.src='https://via.placeholder.com/300x400?text=Anuncio'">
+                <a href="${a.link}" target="_blank" rel="noopener noreferrer" onclick="registrarClique('${a._id}')">
+                    <img src="${a.foto}" alt="${a.titulo}" width="300" height="400" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                 </a>
             `).join('');
         }
@@ -1501,6 +1568,13 @@
 
         async function carregarTodas() {
             console.log('Carregando todas as notícias...');
+            const cacheKey = `${NOTICIAS_CACHE_PREFIX}todas`;
+            const noticiasCache = getCache(cacheKey);
+            if (noticiasCache) {
+                setFiltroAtivo('');
+                exibir(noticiasCache);
+            }
+
             try {
                 setFiltroAtivo('');
                 const res = await fetch(`${API_URL}/noticias`);
@@ -1511,6 +1585,7 @@
                 }
 
                 const noticias = await res.json();
+                setCache(cacheKey, noticias);
                 console.log('Notícias recebidas:', noticias.length);
                 exibir(noticias);
             } catch (e) {
@@ -1521,6 +1596,13 @@
 
         async function carregarPorCategoria(cat) {
             console.log('Carregando categoria:', cat);
+            const cacheKey = `${NOTICIAS_CACHE_PREFIX}categoria:${cat}`;
+            const noticiasCache = getCache(cacheKey);
+            if (noticiasCache) {
+                setFiltroAtivo(cat);
+                exibir(noticiasCache);
+            }
+
             try {
                 setFiltroAtivo(cat);
                 const url = `${API_URL}/noticias/categoria/${encodeURIComponent(cat)}`;
@@ -1534,6 +1616,7 @@
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
                 const noticias = await res.json();
+                setCache(cacheKey, noticias);
                 console.log('Notícias da categoria:', noticias.length);
                 exibir(noticias);
             } catch (e) {
@@ -1557,11 +1640,12 @@
                 return;
             }
 
-            container.innerHTML = noticias.map(n => {
+            container.innerHTML = noticias.map((n, index) => {
+                const prioridade = containerId === 'noticias-container' && index < 2;
                 return `
-                <div class="noticia-card" data-id="${n._id}" onclick="abrirNoticia('${n._id}')">
+                <div class="noticia-card" data-id="${n._id}" role="button" tabindex="0" aria-label="${n.titulo}" onclick="abrirNoticia('${n._id}')" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); abrirNoticia('${n._id}'); }">
                     <div class="noticia-imagem">
-                        <img src="${n.foto}" alt="${n.titulo}" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'">
+                        <img src="${n.foto}" alt="${n.titulo}" width="300" height="200" ${prioridade ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"'} decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                     </div>
                     <div class="noticia-info">
                         <span class="noticia-categoria">${n.categoria}</span>
@@ -1578,14 +1662,14 @@
         function exibir(noticias) {
             const lista = Array.isArray(noticias) ? noticias : [];
             const primeiras = lista.slice(0, LIMITE_DESTAQUE);
-            const restantes = lista.length > LIMITE_DESTAQUE ? lista.slice(LIMITE_DESTAQUE) : lista;
+            const restantes = lista.length > LIMITE_DESTAQUE ? lista.slice(LIMITE_DESTAQUE) : [];
 
             const mensagemVazia = '<p style="grid-column: 1/-1; text-align: center;"><i class="fas fa-search"></i> Nenhuma notícia encontrada</p>';
 
             renderNoticias(primeiras, 'noticias-container', mensagemVazia);
 
             const todasSection = document.getElementById('todas-section');
-            if (todasSection) todasSection.style.display = '';
+            if (todasSection) todasSection.style.display = restantes.length ? '' : 'none';
             renderNoticias(restantes, 'todas-noticias-container', mensagemVazia);
         }
 
@@ -1612,7 +1696,7 @@
         function abrirModal(noticia) {
             const titulo = noticia.titulo || 'Notícia';
             const conteudo = noticia.conteudo || '';
-            const foto = noticia.foto || 'https://via.placeholder.com/800x400?text=Sem+Imagem';
+            const foto = noticia.foto || 'img/Logo.png';
             const cat = noticia.categoria || 'Geral';
             const autor = noticia.autor || 'Administrador';
             const views = noticia.views || 0;
@@ -1620,7 +1704,7 @@
             const dataFormatada = data ? data.toLocaleDateString('pt-BR') : '';
 
             document.getElementById('modal-body').innerHTML = `
-                <img src="${foto}" alt="${titulo}" onerror="this.src='https://via.placeholder.com/800x400?text=Sem+Imagem'">
+                <img src="${foto}" alt="${titulo}" width="800" height="400" loading="eager" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                 <h2>${titulo}</h2>
                 <div class="meta">
                     <span><i class="fas fa-folder"></i> ${cat}</span>
@@ -1654,10 +1738,10 @@
                 const anunciosLateral = anuncios.filter(a => a.posicao === 'lateral' && a.ativo);
                 const anunciosRodape = anuncios.filter(a => a.posicao === 'rodape' && a.ativo);
 
-                iniciarRotacaoSimples('banner-topo', anunciosTopo, 'https://via.placeholder.com/1200x200?text=Anuncio');
-                iniciarRotacaoSimples('banner-meio', anunciosMeio, 'https://via.placeholder.com/1200x200?text=Anuncio');
+                iniciarRotacaoSimples('banner-topo', anunciosTopo, 'img/Logo.png');
+                iniciarRotacaoSimples('banner-meio', anunciosMeio, 'img/Logo.png');
                 iniciarRotacaoLateral('banners-lateral', anunciosLateral);
-                iniciarRotacaoSimples('banner-rodape', anunciosRodape, 'https://via.placeholder.com/1200x200?text=Anuncio');
+                iniciarRotacaoSimples('banner-rodape', anunciosRodape, 'img/Logo.png');
             } catch (e) {
                 console.error('Erro ao carregar anúncios:', e);
             }
@@ -1737,10 +1821,18 @@
         }
 
         async function carregarCategoriasPublicas() {
+            const categoriasSalvas = getCache(CATEGORIAS_CACHE_KEY);
+            if (categoriasSalvas) {
+                categoriasCache = categoriasSalvas;
+                renderCategoriasNav(categoriasCache);
+                renderCategoriasFiltros(categoriasCache);
+            }
+
             try {
                 const res = await fetch(`${API_URL}/categorias`);
                 const data = await res.json();
                 categoriasCache = (data || []).map(c => c.nome || c);
+                setCache(CATEGORIAS_CACHE_KEY, categoriasCache);
                 renderCategoriasNav(categoriasCache);
                 renderCategoriasFiltros(categoriasCache);
             } catch (e) {
@@ -1817,10 +1909,18 @@
                 return;
             }
 
+            const cacheKey = `${NOTICIAS_CACHE_PREFIX}busca:${termo}`;
+            const noticiasCache = getCache(cacheKey);
+            if (noticiasCache) {
+                setFiltroAtivo('');
+                exibir(noticiasCache);
+            }
+
             try {
                 setFiltroAtivo('');
                 const res = await fetch(`${API_URL}/utils/busca/${encodeURIComponent(termo)}`);
                 const noticias = await res.json();
+                setCache(cacheKey, noticias);
                 exibir(noticias);
                 document.getElementById('buscaInput').value = '';
                 atualizarBotaoLimparBusca();
@@ -2099,21 +2199,29 @@
             }
         }
 
-        // Carrega as notícias quando a página abre
-        window.addEventListener('load', () => {
-            console.log('Página carregada, iniciando carregamento de notícias e banners...');
+        function carregarSecundarios() {
+            const agendar = window.requestIdleCallback || ((callback) => setTimeout(callback, 900));
+
+            agendar(() => {
+                carregarAnuncios();
+                setTimeout(carregarClima, 250);
+                setTimeout(carregarMegaSena, 600);
+
+                // Atualiza Mega Sena automaticamente a cada 30 minutos
+                setInterval(() => {
+                    console.log('Atualizando Mega Sena automaticamente...');
+                    carregarMegaSena();
+                }, 30 * 60 * 1000); // 30 minutos em milissegundos
+            });
+        }
+
+        // Carrega as notícias assim que o HTML fica pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Página pronta, iniciando carregamento rápido de notícias...');
             atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
             carregarTodas();
-            carregarAnuncios();
-            carregarClima();
-            carregarMegaSena();
-
-            // Atualiza Mega Sena automaticamente a cada 30 minutos
-            setInterval(() => {
-                console.log('Atualizando Mega Sena automaticamente...');
-                carregarMegaSena();
-            }, 30 * 60 * 1000); // 30 minutos em milissegundos
+            carregarSecundarios();
         });
     </script>
 </body>
