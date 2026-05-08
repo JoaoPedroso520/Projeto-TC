@@ -44,4 +44,6 @@ const anuncioSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+anuncioSchema.index({ ativo: 1, dataInicio: 1, dataFim: 1, posicao: 1 });
+
 module.exports = mongoose.model('Anuncio', anuncioSchema);

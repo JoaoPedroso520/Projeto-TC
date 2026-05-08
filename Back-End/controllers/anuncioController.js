@@ -8,7 +8,10 @@ exports.obterAtivos = async (req, res) => {
       ativo: true,
       dataInicio: { $lte: agora },
       dataFim: { $gte: agora },
-    });
+    })
+      .sort({ posicao: 1, createdAt: -1 })
+      .lean();
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(anuncios);
   } catch (error) {
     res.status(500).json({ erro: error.message });
@@ -24,7 +27,8 @@ exports.obterPorPosicao = async (req, res) => {
       ativo: true,
       dataInicio: { $lte: agora },
       dataFim: { $gte: agora },
-    });
+    }).sort({ createdAt: -1 }).lean();
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(anuncios);
   } catch (error) {
     res.status(500).json({ erro: error.message });

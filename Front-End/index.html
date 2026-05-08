@@ -1461,10 +1461,22 @@
         const CACHE_TTL_MS = 5 * 60 * 1000;
         const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
         const CATEGORIAS_CACHE_KEY = 'c7-categorias-cache';
+        const ANUNCIOS_CACHE_KEY = 'c7-anuncios-cache';
+
+        function getStorage() {
+            try {
+                const testKey = '__c7_cache_test__';
+                localStorage.setItem(testKey, '1');
+                localStorage.removeItem(testKey);
+                return localStorage;
+            } catch (e) {
+                return sessionStorage;
+            }
+        }
 
         function getCache(key) {
             try {
-                const raw = sessionStorage.getItem(key);
+                const raw = getStorage().getItem(key);
                 if (!raw) return null;
                 const cached = JSON.parse(raw);
                 if (!cached || Date.now() - cached.time > CACHE_TTL_MS) return null;
@@ -1474,9 +1486,20 @@
             }
         }
 
+        function getStaleCache(key) {
+            try {
+                const raw = getStorage().getItem(key);
+                if (!raw) return null;
+                const cached = JSON.parse(raw);
+                return cached && cached.data ? cached.data : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         function setCache(key, data) {
             try {
-                sessionStorage.setItem(key, JSON.stringify({ time: Date.now(), data }));
+                getStorage().setItem(key, JSON.stringify({ time: Date.now(), data }));
             } catch (e) {
                 console.warn('Cache local indisponível:', e);
             }
@@ -1569,15 +1592,17 @@
         async function carregarTodas() {
             console.log('Carregando todas as notícias...');
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}todas`;
-            const noticiasCache = getCache(cacheKey);
+            const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
+            let exibiuCache = false;
             if (noticiasCache) {
                 setFiltroAtivo('');
                 exibir(noticiasCache);
+                exibiuCache = true;
             }
 
             try {
                 setFiltroAtivo('');
-                const res = await fetch(`${API_URL}/noticias`);
+                const res = await fetch(`${API_URL}/noticias`, { cache: 'default' });
                 console.log('Response status:', res.status);
 
                 if (!res.ok) {
@@ -1590,17 +1615,21 @@
                 exibir(noticias);
             } catch (e) {
                 console.error('Erro ao carregar:', e);
-                document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
+                if (!exibiuCache) {
+                    document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
+                }
             }
         }
 
         async function carregarPorCategoria(cat) {
             console.log('Carregando categoria:', cat);
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}categoria:${cat}`;
-            const noticiasCache = getCache(cacheKey);
+            const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
+            let exibiuCache = false;
             if (noticiasCache) {
                 setFiltroAtivo(cat);
                 exibir(noticiasCache);
+                exibiuCache = true;
             }
 
             try {
@@ -1621,7 +1650,9 @@
                 exibir(noticias);
             } catch (e) {
                 console.error('Erro ao carregar categoria:', e);
-                document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
+                if (!exibiuCache) {
+                    document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
+                }
             }
         }
 
@@ -1725,26 +1756,35 @@
 
         async function carregarAnuncios() {
             console.log('Carregando anúncios...');
+            const anunciosCache = getCache(ANUNCIOS_CACHE_KEY) || getStaleCache(ANUNCIOS_CACHE_KEY);
+            if (anunciosCache) {
+                renderizarAnuncios(anunciosCache);
+            }
+
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`);
+                const res = await fetch(`${API_URL}/anuncios`, { cache: 'default' });
                 if (!res.ok) throw new Error('Erro ao carregar anúncios');
 
                 const anuncios = await res.json();
+                setCache(ANUNCIOS_CACHE_KEY, anuncios);
                 console.log('Anúncios carregados:', anuncios.length);
-
-                // Filtrar anúncios por posição
-                const anunciosTopo = anuncios.filter(a => a.posicao === 'topo' && a.ativo);
-                const anunciosMeio = anuncios.filter(a => a.posicao === 'meio' && a.ativo);
-                const anunciosLateral = anuncios.filter(a => a.posicao === 'lateral' && a.ativo);
-                const anunciosRodape = anuncios.filter(a => a.posicao === 'rodape' && a.ativo);
-
-                iniciarRotacaoSimples('banner-topo', anunciosTopo, 'img/Logo.png');
-                iniciarRotacaoSimples('banner-meio', anunciosMeio, 'img/Logo.png');
-                iniciarRotacaoLateral('banners-lateral', anunciosLateral);
-                iniciarRotacaoSimples('banner-rodape', anunciosRodape, 'img/Logo.png');
+                renderizarAnuncios(anuncios);
             } catch (e) {
                 console.error('Erro ao carregar anúncios:', e);
             }
+        }
+
+        function renderizarAnuncios(anuncios) {
+            const lista = Array.isArray(anuncios) ? anuncios : [];
+            const anunciosTopo = lista.filter(a => a.posicao === 'topo' && a.ativo);
+            const anunciosMeio = lista.filter(a => a.posicao === 'meio' && a.ativo);
+            const anunciosLateral = lista.filter(a => a.posicao === 'lateral' && a.ativo);
+            const anunciosRodape = lista.filter(a => a.posicao === 'rodape' && a.ativo);
+
+            iniciarRotacaoSimples('banner-topo', anunciosTopo, 'img/Logo.png');
+            iniciarRotacaoSimples('banner-meio', anunciosMeio, 'img/Logo.png');
+            iniciarRotacaoLateral('banners-lateral', anunciosLateral);
+            iniciarRotacaoSimples('banner-rodape', anunciosRodape, 'img/Logo.png');
         }
 
         async function registrarClique(anuncioId) {
@@ -2203,7 +2243,6 @@
             const agendar = window.requestIdleCallback || ((callback) => setTimeout(callback, 900));
 
             agendar(() => {
-                carregarAnuncios();
                 setTimeout(carregarClima, 250);
                 setTimeout(carregarMegaSena, 600);
 
@@ -2221,6 +2260,7 @@
             atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
             carregarTodas();
+            carregarAnuncios();
             carregarSecundarios();
         });
     </script>

@@ -9,7 +9,10 @@ exports.obterTodas = async (req, res) => {
   try {
     const noticias = await Noticia.find({ ativo: true })
       .sort({ createdAt: -1 })
-      .limit(50);
+      .select('titulo foto categoria views createdAt ativo')
+      .limit(50)
+      .lean();
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(noticias);
   } catch (error) {
     res.status(500).json({ erro: error.message });
@@ -86,7 +89,12 @@ exports.obterPorCategoria = async (req, res) => {
     const noticias = await Noticia.find({
       categoria: { $regex: `^${escapeRegex(categoria)}$`, $options: 'i' },
       ativo: true,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .select('titulo foto categoria views createdAt ativo')
+      .limit(50)
+      .lean();
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(noticias);
   } catch (error) {
     res.status(500).json({ erro: error.message });

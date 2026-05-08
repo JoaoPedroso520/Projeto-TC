@@ -37,4 +37,7 @@ const noticiaSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+noticiaSchema.index({ ativo: 1, createdAt: -1 });
+noticiaSchema.index({ categoria: 1, ativo: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Noticia', noticiaSchema);

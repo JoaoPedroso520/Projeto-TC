@@ -26,8 +26,13 @@ router.get('/busca/:termo', async (req, res) => {
         { conteudo: { $regex: termo, $options: 'i' } },
         { categoria: { $regex: termo, $options: 'i' } },
       ],
-    });
+    })
+      .sort({ createdAt: -1 })
+      .select('titulo foto categoria views createdAt ativo')
+      .limit(50)
+      .lean();
 
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(noticias);
   } catch (erro) {
     res.status(500).json({ erro: 'Erro ao buscar notícias' });
