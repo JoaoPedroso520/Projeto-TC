@@ -781,12 +781,12 @@
             padding: 0;
         }
 
-        #noticias-container {
-            min-height: 720px;
+        #noticias-container.is-loading {
+            min-height: 260px;
         }
 
-        #todas-noticias-container {
-            min-height: 360px;
+        #todas-noticias-container.is-loading {
+            min-height: 180px;
         }
 
         .noticia-card {
@@ -797,6 +797,8 @@
             border: 1px solid rgba(0, 204, 0, 0.22);
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .noticia-card:hover {
@@ -832,10 +834,16 @@
 
         .noticia-info {
             padding: 18px;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
         }
 
         .noticia-categoria {
             display: inline-block;
+            align-self: flex-start;
+            width: auto;
+            max-width: max-content;
             background: #00cc00;
             color: #000;
             padding: 6px 12px;
@@ -848,7 +856,7 @@
         .noticia-titulo {
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 18px;
             color: #b8f6a6;
             line-height: 1.35;
         }
@@ -859,6 +867,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 204, 0, 0.16);
         }
 
         .noticia-data i {
@@ -1196,10 +1207,6 @@
                 grid-template-columns: 1fr;
             }
 
-            #noticias-container {
-                min-height: 2220px;
-            }
-
             .logo h1 {
                 font-size: 22px;
             }
@@ -1373,7 +1380,7 @@
     <section class="section-block section-alt">
         <div class="section-inner">
             <h2 class="section-title"><i class="fas fa-rss"></i> Últimas Notícias</h2>
-            <div class="noticias-grid" id="noticias-container">
+            <div class="noticias-grid is-loading" id="noticias-container">
                 <p style="grid-column: 1/-1; text-align: center; padding: 40px; font-size: 16px;"><i
                         class="fas fa-spinner fa-spin"></i> Carregando...</p>
             </div>
@@ -1421,7 +1428,7 @@
         <div class="section-inner">
             <h2 class="section-title"><i class="fas fa-layer-group"></i> Todas as Notícias</h2>
             <div class="filtros-noticias" id="filtrosNoticias"></div>
-            <div class="noticias-grid" id="todas-noticias-container"></div>
+            <div class="noticias-grid is-loading" id="todas-noticias-container"></div>
         </div>
     </section>
 
@@ -1704,6 +1711,7 @@
             } catch (e) {
                 console.warn('Erro ao carregar:', e);
                 if (!exibiuCache) {
+                    document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
                 }
             }
@@ -1739,6 +1747,7 @@
             } catch (e) {
                 console.warn('Erro ao carregar categoria:', e);
                 if (!exibiuCache) {
+                    document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
                 }
             }
@@ -1749,6 +1758,7 @@
         function renderNoticias(noticias, containerId, vazioMensagem) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            container.classList.remove('is-loading');
 
             if (!noticias || noticias.length === 0) {
                 if (vazioMensagem !== undefined) {
