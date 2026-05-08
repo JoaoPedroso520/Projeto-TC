@@ -23,6 +23,7 @@ async function garantirAdminPadrao() {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Middlewares
 app.use(cors());
@@ -35,6 +36,7 @@ app.use('/api/anuncios', require('./routes/anuncios'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/utils', require('./routes/utils'));
 app.use('/api/categorias', require('./routes/categorias'));
+app.use('/api/imagens', require('./routes/imagens'));
 
 // Rota raiz
 app.get('/', (req, res) => {

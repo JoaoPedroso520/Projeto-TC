@@ -104,7 +104,7 @@ function criarLinhaNoticias(noticia) {
     row.innerHTML = `
         <td>${noticia.titulo}</td>
         <td>${noticia.categoria}</td>
-        <td><span class="status ${noticia.ativo  'ativo' : 'inativo'}">${noticia.ativo  'Ativo' : 'Inativo'}</span></td>
+        <td><span class="status ${noticia.ativo ? 'ativo' : 'inativo'}">${noticia.ativo ? 'Ativo' : 'Inativo'}</span></td>
         <td>${noticia.views}</td>
         <td>${dataFormatada}</td>
         <td>
@@ -136,7 +136,7 @@ function fecharFormularioNoticia() {
 // Editar notícia
 async function editarNoticia(id) {
     try {
-        const response = await fetch(`${API_URL}/noticias/${id}`);
+        const response = await fetch(`${API_URL}/noticias/${id}?raw=1`);
         const noticia = await response.json();
 
         noticiaEmEdicao = noticia;
@@ -376,7 +376,7 @@ btnConfirmar.addEventListener('click', async () => {
         if (response.ok) {
             fecharModal();
             tipo === 'noticia' ? carregarNoticias() : carregarAnuncios();
-            alert(`${tipo === 'noticia'  'Notícia' : 'Anúncio'} deletado com sucesso!`);
+            alert(`${tipo === 'noticia' ? 'Notícia' : 'Anúncio'} deletado com sucesso!`);
         } else {
             alert('Erro ao deletar');
         }

@@ -1470,6 +1470,9 @@
         const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
         const CATEGORIAS_CACHE_KEY = 'c7-categorias-cache';
         const ANUNCIOS_CACHE_KEY = 'c7-anuncios-cache';
+        const noticiasResumoCache = new Map();
+        const noticiasDetalheCache = new Map();
+        const imagensModalPreload = new Set();
 
         function getStorage() {
             try {
@@ -1519,6 +1522,57 @@
             img.src = fallback || 'img/Logo.png';
         }
 
+        function extrairGoogleDriveId(url) {
+            const texto = String(url || '');
+            const formatos = [
+                /drive\.google\.com\/file\/d\/([^/?#]+)/i,
+                /drive\.google\.com\/open\?id=([^&#]+)/i,
+                /drive\.google\.com\/uc\?[^#]*id=([^&#]+)/i,
+                /docs\.google\.com\/uc\?[^#]*id=([^&#]+)/i
+            ];
+            for (const formato of formatos) {
+                const match = texto.match(formato);
+                if (match && match[1]) return match[1];
+            }
+            return '';
+        }
+
+        function otimizarImagem(url, largura = 600, qualidade = 65) {
+            const original = String(url || '').trim();
+            if (!original || original.startsWith('data:') || original.startsWith('blob:') || original.startsWith('img/')) {
+                return original || 'img/Logo.png';
+            }
+
+            if (original.includes('/api/imagens/')) {
+                try {
+                    const url = new URL(original, window.location.href);
+                    url.searchParams.set('w', String(largura));
+                    url.searchParams.set('q', String(qualidade));
+                    return url.toString();
+                } catch (e) {
+                    return original;
+                }
+            }
+
+            const driveId = extrairGoogleDriveId(original);
+            if (driveId) {
+                return `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w${largura}`;
+            }
+
+            if (/googleusercontent\.com/i.test(original)) {
+                return original.replace(/=s\d+(-[a-z])?$/i, `=s${largura}`).replace(/=w\d+(-h\d+)?(-[a-z])?$/i, `=w${largura}`);
+            }
+
+            if (!/^https?:\/\//i.test(original)) return original;
+
+            const urlSemProtocolo = original.replace(/^https?:\/\//i, '');
+            return `https://images.weserv.nl/?url=${encodeURIComponent(urlSemProtocolo)}&w=${largura}&q=${qualidade}&output=webp`;
+        }
+
+        function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
+            return `src="${otimizarImagem(url, larguraPequena, qualidade)}" srcset="${otimizarImagem(url, larguraPequena, qualidade)} ${larguraPequena}w, ${otimizarImagem(url, larguraGrande, qualidade)} ${larguraGrande}w"`;
+        }
+
         function limparRotacao(containerId) {
             if (anunciosIntervalos[containerId]) {
                 clearInterval(anunciosIntervalos[containerId]);
@@ -1533,9 +1587,10 @@
                 container.innerHTML = '';
                 return;
             }
+            const imagem = imagemResponsiva(anuncio.foto, 480, 1200, 62);
             container.innerHTML = `
                 <a href="${anuncio.link}" target="_blank" rel="noopener noreferrer" onclick="registrarClique('${anuncio._id}')">
-                    <img src="${anuncio.foto}" alt="${anuncio.titulo}" width="1200" height="200" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, '${placeholder}')">
+                    <img ${imagem} sizes="(max-width: 768px) 100vw, 1200px" alt="${anuncio.titulo}" width="1200" height="200" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, '${placeholder}')">
                 </a>
             `;
         }
@@ -1555,7 +1610,7 @@
             const visible = getCyclicSlice(anuncios, startIndex, Math.min(3, anuncios.length));
             container.innerHTML = visible.map(a => `
                 <a href="${a.link}" target="_blank" rel="noopener noreferrer" onclick="registrarClique('${a._id}')">
-                    <img src="${a.foto}" alt="${a.titulo}" width="300" height="400" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
+                    <img ${imagemResponsiva(a.foto, 240, 480, 62)} sizes="240px" alt="${a.titulo}" width="300" height="400" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                 </a>
             `).join('');
         }
@@ -1681,10 +1736,11 @@
 
             container.innerHTML = noticias.map((n, index) => {
                 const prioridade = containerId === 'noticias-container' && index < 2;
+                noticiasResumoCache.set(String(n._id), n);
                 return `
-                <div class="noticia-card" data-id="${n._id}" role="button" tabindex="0" aria-label="${n.titulo}" onclick="abrirNoticia('${n._id}')" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); abrirNoticia('${n._id}'); }">
+                <div class="noticia-card" data-id="${n._id}" role="button" tabindex="0" aria-label="${n.titulo}" onclick="abrirNoticia('${n._id}')" onmouseenter="prepararNoticia('${n._id}')" onfocus="prepararNoticia('${n._id}')" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); abrirNoticia('${n._id}'); }">
                     <div class="noticia-imagem">
-                        <img src="${n.foto}" alt="${n.titulo}" width="300" height="200" ${prioridade ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"'} decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
+                        <img ${imagemResponsiva(n.foto, 360, 800, 58)} sizes="(max-width: 768px) 100vw, 300px" alt="${n.titulo}" width="300" height="200" ${prioridade ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"'} decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                     </div>
                     <div class="noticia-info">
                         <span class="noticia-categoria">${n.categoria}</span>
@@ -1701,26 +1757,77 @@
         function exibir(noticias) {
             const lista = Array.isArray(noticias) ? noticias : [];
             const primeiras = lista.slice(0, LIMITE_DESTAQUE);
-            const restantes = lista.length > LIMITE_DESTAQUE ? lista.slice(LIMITE_DESTAQUE) : [];
 
             const mensagemVazia = '<p style="grid-column: 1/-1; text-align: center;"><i class="fas fa-search"></i> Nenhuma notícia encontrada</p>';
 
             renderNoticias(primeiras, 'noticias-container', mensagemVazia);
 
             const todasSection = document.getElementById('todas-section');
-            if (todasSection) todasSection.style.display = restantes.length ? '' : 'none';
-            renderNoticias(restantes, 'todas-noticias-container', mensagemVazia);
+            if (todasSection) todasSection.style.display = '';
+            renderNoticias(lista, 'todas-noticias-container', mensagemVazia);
+
+            const agendar = window.requestIdleCallback || ((callback) => setTimeout(callback, 700));
+            agendar(() => primeiras.slice(0, 3).forEach(noticia => prepararNoticia(noticia._id)));
+        }
+
+        function preCarregarImagemModal(foto) {
+            const src = otimizarImagem(foto, 800, 68);
+            if (!src || imagensModalPreload.has(src)) return;
+            imagensModalPreload.add(src);
+            const img = new Image();
+            img.decoding = 'async';
+            img.src = src;
+        }
+
+        async function buscarNoticiaDetalhe(id, contarView = false) {
+            const chave = String(id);
+            if (!contarView && noticiasDetalheCache.has(chave)) return noticiasDetalheCache.get(chave);
+
+            const url = `${API_URL}/noticias/${encodeURIComponent(chave)}${contarView ? '' : '?preview=1'}`;
+            const promessa = fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP erro! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(noticia => {
+                    noticiasDetalheCache.set(chave, noticia);
+                    return noticia;
+                })
+                .catch(erro => {
+                    if (!contarView) noticiasDetalheCache.delete(chave);
+                    throw erro;
+                });
+
+            if (!contarView) noticiasDetalheCache.set(chave, promessa);
+            return promessa;
+        }
+
+        function prepararNoticia(id) {
+            const resumo = noticiasResumoCache.get(String(id));
+            if (resumo && resumo.foto) preCarregarImagemModal(resumo.foto);
+            buscarNoticiaDetalhe(id, false).catch(() => {});
         }
 
         async function abrirNoticia(id) {
             try {
-                const res = await fetch(`${API_URL}/noticias/${id}`);
-                if (!res.ok) {
-                    throw new Error(`HTTP erro! status: ${res.status}`);
+                const resumo = noticiasResumoCache.get(String(id));
+                if (resumo) preCarregarImagemModal(resumo.foto);
+                const temDetalhe = noticiasDetalheCache.has(String(id));
+                if (resumo && !temDetalhe) {
+                    abrirModal({
+                        ...resumo,
+                        conteudo: '<p style="color:#b8c0c8;">Carregando...</p>',
+                    });
                 }
-                const noticia = await res.json();
+                const noticia = await buscarNoticiaDetalhe(id, false);
                 atualizarViewsNoCard(id, noticia.views || 0);
                 abrirModal(noticia);
+                buscarNoticiaDetalhe(id, true)
+                    .then(noticiaAtualizada => {
+                        noticiasDetalheCache.set(String(id), noticiaAtualizada);
+                        atualizarViewsNoCard(id, noticiaAtualizada.views || 0);
+                    })
+                    .catch(() => {});
             } catch (e) {
                 console.error('Erro ao abrir notícia:', e);
             }
@@ -1743,7 +1850,7 @@
             const dataFormatada = data ? data.toLocaleDateString('pt-BR') : '';
 
             document.getElementById('modal-body').innerHTML = `
-                <img src="${foto}" alt="${titulo}" width="800" height="400" loading="eager" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
+                <img ${imagemResponsiva(foto, 800, 1200, 68)} sizes="(max-width: 768px) 100vw, 800px" alt="${titulo}" width="800" height="400" loading="eager" decoding="async" onerror="carregarImagemFallback(this, 'img/Logo.png')">
                 <h2>${titulo}</h2>
                 <div class="meta">
                     <span><i class="fas fa-folder"></i> ${cat}</span>

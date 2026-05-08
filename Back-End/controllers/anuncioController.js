@@ -1,4 +1,5 @@
 const Anuncio = require('../models/Anuncio');
+const { withOptimizedImage } = require('../utils/imageHelpers');
 
 // Obter todos os anúncios ativos
 exports.obterAtivos = async (req, res) => {
@@ -12,7 +13,7 @@ exports.obterAtivos = async (req, res) => {
       .sort({ posicao: 1, createdAt: -1 })
       .lean();
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    res.json(anuncios);
+    res.json(anuncios.map(anuncio => withOptimizedImage(req, anuncio, 'anuncios', 1200, 62)));
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
@@ -29,7 +30,7 @@ exports.obterPorPosicao = async (req, res) => {
       dataFim: { $gte: agora },
     }).sort({ createdAt: -1 }).lean();
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    res.json(anuncios);
+    res.json(anuncios.map(anuncio => withOptimizedImage(req, anuncio, 'anuncios', 1200, 62)));
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }

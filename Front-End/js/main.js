@@ -2,6 +2,59 @@
 const API_URL = 'https://c7-noticias-backend.onrender.com/api';
 let noticiaAtual = null;
 
+function extrairGoogleDriveId(url) {
+    const texto = String(url || '');
+    const formatos = [
+        /drive\.google\.com\/file\/d\/([^/?#]+)/i,
+        /drive\.google\.com\/open\?id=([^&#]+)/i,
+        /drive\.google\.com\/uc\?[^#]*id=([^&#]+)/i,
+        /docs\.google\.com\/uc\?[^#]*id=([^&#]+)/i
+    ];
+
+    for (const formato of formatos) {
+        const match = texto.match(formato);
+        if (match && match[1]) return match[1];
+    }
+
+    return '';
+}
+
+function otimizarImagem(url, largura = 600, qualidade = 65) {
+    const original = String(url || '').trim();
+    if (!original || original.startsWith('data:') || original.startsWith('blob:') || original.startsWith('../img/') || original.startsWith('img/')) {
+        return original || 'img/Logo.png';
+    }
+
+    if (original.includes('/api/imagens/')) {
+        try {
+            const url = new URL(original, window.location.href);
+            url.searchParams.set('w', String(largura));
+            url.searchParams.set('q', String(qualidade));
+            return url.toString();
+        } catch (e) {
+            return original;
+        }
+    }
+
+    const driveId = extrairGoogleDriveId(original);
+    if (driveId) {
+        return `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w${largura}`;
+    }
+
+    if (/googleusercontent\.com/i.test(original)) {
+        return original.replace(/=s\d+(-[a-z])?$/i, `=s${largura}`).replace(/=w\d+(-h\d+)?(-[a-z])?$/i, `=w${largura}`);
+    }
+
+    if (!/^https?:\/\//i.test(original)) return original;
+
+    const urlSemProtocolo = original.replace(/^https?:\/\//i, '');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(urlSemProtocolo)}&w=${largura}&q=${qualidade}&output=webp`;
+}
+
+function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
+    return `src="${otimizarImagem(url, larguraPequena, qualidade)}" srcset="${otimizarImagem(url, larguraPequena, qualidade)} ${larguraPequena}w, ${otimizarImagem(url, larguraGrande, qualidade)} ${larguraGrande}w"`;
+}
+
 // Elementos do DOM
 const noticiaContainer = document.getElementById('noticias-container');
 const modal = document.getElementById('modal');
@@ -91,7 +144,7 @@ function criarCardNoticia(noticia) {
 
     card.innerHTML = `
         <div class="noticia-imagem">
-            <img src="${noticia.foto}" alt="${noticia.titulo}" onerror="this.src='https://via.placeholder.com/300x200?text=Sem+Imagem'">
+            <img ${imagemResponsiva(noticia.foto, 360, 720, 58)} sizes="(max-width: 768px) 100vw, 300px" alt="${noticia.titulo}" width="300" height="200" loading="lazy" decoding="async" onerror="this.src='img/Logo.png'">
         </div>
         <div class="noticia-info">
             <span class="noticia-categoria">${noticia.categoria}</span>
@@ -114,7 +167,7 @@ function mostrarNoticiaCompleta(noticia) {
     const dataFormatada = data.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     modalBody.innerHTML = `
-        <img src="${noticia.foto}" alt="${noticia.titulo}" onerror="this.src='https://via.placeholder.com/800x400?text=Sem+Imagem'">
+        <img ${imagemResponsiva(noticia.foto, 800, 1200, 68)} sizes="(max-width: 768px) 100vw, 800px" alt="${noticia.titulo}" width="800" height="400" loading="eager" decoding="async" onerror="this.src='img/Logo.png'">
         <h2>${noticia.titulo}</h2>
         <p style="font-size: 12px; color: #888; margin-bottom: 15px;">
             ${dataFormatada} - ${noticia.categoria}
@@ -135,7 +188,9 @@ async function carregarAnuncios() {
         const anuncioBanner = anuncios.find(a => a.posicao === 'topo') || anuncios[0];
         if (anuncioBanner) {
             const bannerElement = document.getElementById('banner-img');
-            bannerElement.src = anuncioBanner.foto;
+            bannerElement.src = otimizarImagem(anuncioBanner.foto, 1200, 62);
+            bannerElement.srcset = `${otimizarImagem(anuncioBanner.foto, 480, 62)} 480w, ${otimizarImagem(anuncioBanner.foto, 1200, 62)} 1200w`;
+            bannerElement.sizes = '(max-width: 768px) 100vw, 1200px';
             bannerElement.addEventListener('click', () => {
                 if (anuncioBanner.link !== '#') {
                     window.open(anuncioBanner.link, '_blank');
@@ -149,7 +204,7 @@ async function carregarAnuncios() {
         if (anuncioLateral) {
             const lateralElement = document.getElementById('anuncio-lateral');
             lateralElement.innerHTML = `
-                <img src="${anuncioLateral.foto}" alt="Anúncio" style="cursor: pointer;">
+                <img ${imagemResponsiva(anuncioLateral.foto, 240, 480, 62)} sizes="240px" alt="Anúncio" width="300" height="400" loading="lazy" decoding="async" style="cursor: pointer;">
             `;
             lateralElement.querySelector('img').addEventListener('click', () => {
                 if (anuncioLateral.link !== '#') {
@@ -164,7 +219,7 @@ async function carregarAnuncios() {
         if (anuncioRodape) {
             const rodapeElement = document.getElementById('anuncio-rodape');
             rodapeElement.innerHTML = `
-                <img src="${anuncioRodape.foto}" alt="Anúncio Rodapé" style="cursor: pointer;">
+                <img ${imagemResponsiva(anuncioRodape.foto, 480, 1200, 62)} sizes="(max-width: 768px) 100vw, 1200px" alt="Anúncio Rodapé" width="1200" height="200" loading="lazy" decoding="async" style="cursor: pointer;">
             `;
             rodapeElement.querySelector('img').addEventListener('click', () => {
                 if (anuncioRodape.link !== '#') {
