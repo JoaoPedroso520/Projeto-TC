@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="dns-prefetch" href="//api.open-meteo.com">
     <link rel="dns-prefetch" href="//servicebus2.caixa.gov.br">
+    <link rel="preload" as="image" href="img/Logo.png" fetchpriority="high">
     <link rel="icon" type="image/png" href="img/C7.png">
     <title>C7 Notícias</title>
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -423,6 +424,7 @@
             gap: 14px;
             justify-items: stretch;
             align-items: stretch;
+            min-height: 190px;
         }
 
         /* MEGA SENA */
@@ -434,6 +436,7 @@
             margin: 0;
             width: 100%;
             box-shadow: 0 12px 30px rgba(0, 204, 0, 0.2);
+            min-height: 430px;
         }
 
         .mega-widget h3 {
@@ -697,6 +700,7 @@
         @media (max-width: 768px) {
             .clima-cards {
                 grid-template-columns: 1fr;
+                min-height: 568px;
             }
         }
 
@@ -775,6 +779,14 @@
             margin: 0;
             max-width: none;
             padding: 0;
+        }
+
+        #noticias-container {
+            min-height: 720px;
+        }
+
+        #todas-noticias-container {
+            min-height: 360px;
         }
 
         .noticia-card {
@@ -1006,6 +1018,7 @@
             font-size: 13px;
         }
 
+        .footer-col h3,
         .footer-col h4 {
             margin-bottom: 12px;
             color: #7dffa5;
@@ -1183,6 +1196,10 @@
                 grid-template-columns: 1fr;
             }
 
+            #noticias-container {
+                min-height: 2220px;
+            }
+
             .logo h1 {
                 font-size: 22px;
             }
@@ -1276,6 +1293,7 @@
             }
             .clima-cards {
                 grid-template-columns: 1fr;
+                min-height: 568px;
             }
             .clima-card {
                 min-height: 180px;
@@ -1339,10 +1357,11 @@
         </div>
     </header>
 
+    <main id="conteudo-principal">
     <section class="section-block">
         <div class="section-inner">
             <div class="banner" id="banner-topo">
-                <img src="img/Logo.png" alt="Banner" width="1200" height="200" fetchpriority="low" decoding="async"
+                <img src="img/Logo.png" alt="Banner" width="1200" height="200" loading="eager" fetchpriority="high" decoding="async"
                     onclick="redirecionarBanner('#')">
             </div>
         </div>
@@ -1373,14 +1392,15 @@
 
     <section class="section-block" id="clima-mega-section">
         <div class="section-inner">
+            <h2 class="sr-only">Clima e Mega Sena</h2>
             <!-- CLIMA -->
-            <div class="clima-widget" id="climaWidget" style="display: none;">
+            <div class="clima-widget" id="climaWidget">
                 <h3><i class="fas fa-cloud-sun"></i> Previsão do Tempo - Vale do Ivaí</h3>
                 <div class="clima-cards" id="climaCards"></div>
             </div>
 
             <!-- MEGA SENA -->
-            <div class="mega-widget" id="megaWidget" style="display: none;">
+            <div class="mega-widget" id="megaWidget">
                 <h3><i class="fas fa-badge-check"></i> Mega Sena</h3>
                 <div class="mega-meta" id="megaMeta"></div>
                 <div class="mega-numbers" id="megaNumbers"></div>
@@ -1415,6 +1435,8 @@
         </div>
     </section>
 
+    </main>
+
     <div id="modal" class="modal">
         <div class="modal-content" role="dialog" aria-modal="true" aria-label="Notícia">
             <button class="close" type="button" aria-label="Fechar notícia" onclick="fecharModal()"><i class="fas fa-times"></i></button>
@@ -1422,6 +1444,8 @@
         </div>
     </div>
     <footer>
+        <h2 class="sr-only">Rodape</h2>
+        <h3 class="sr-only">Links do rodape</h3>
         <div class="footer-grid">
             <div class="footer-col footer-brand">
                 <div class="footer-logo">
@@ -1588,9 +1612,10 @@
                 return;
             }
             const imagem = imagemResponsiva(anuncio.foto, 480, 1200, 62);
+            const prioridade = containerId === 'banner-topo';
             container.innerHTML = `
                 <a href="${anuncio.link}" target="_blank" rel="noopener noreferrer" onclick="registrarClique('${anuncio._id}')">
-                    <img ${imagem} sizes="(max-width: 768px) 100vw, 1200px" alt="${anuncio.titulo}" width="1200" height="200" loading="lazy" decoding="async" onerror="carregarImagemFallback(this, '${placeholder}')">
+                    <img ${imagem} sizes="(max-width: 768px) 100vw, 1200px" alt="${anuncio.titulo}" width="1200" height="200" ${prioridade ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"'} decoding="async" onerror="carregarImagemFallback(this, '${placeholder}')">
                 </a>
             `;
         }
@@ -1677,7 +1702,7 @@
                 console.log('Notícias recebidas:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.error('Erro ao carregar:', e);
+                console.warn('Erro ao carregar:', e);
                 if (!exibiuCache) {
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
                 }
@@ -1704,7 +1729,7 @@
 
                 if (!res.ok) {
                     const erro = await res.text();
-                    console.error('Erro do servidor:', erro);
+                    console.warn('Erro do servidor:', erro);
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
                 const noticias = await res.json();
@@ -1712,7 +1737,7 @@
                 console.log('Notícias da categoria:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.error('Erro ao carregar categoria:', e);
+                console.warn('Erro ao carregar categoria:', e);
                 if (!exibiuCache) {
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
                 }
@@ -1829,7 +1854,7 @@
                     })
                     .catch(() => {});
             } catch (e) {
-                console.error('Erro ao abrir notícia:', e);
+                console.warn('Erro ao abrir notícia:', e);
             }
         }
 
@@ -1885,7 +1910,7 @@
                 console.log('Anúncios carregados:', anuncios.length);
                 renderizarAnuncios(anuncios);
             } catch (e) {
-                console.error('Erro ao carregar anúncios:', e);
+                console.warn('Erro ao carregar anúncios:', e);
             }
         }
 
@@ -1907,7 +1932,7 @@
                 await fetch(`${API_URL}/anuncios/${anuncioId}/clique`, { method: 'POST' });
                 console.log('Clique registrado');
             } catch (e) {
-                console.error('Erro ao registrar clique:', e);
+                console.warn('Erro ao registrar clique:', e);
             }
         }
 
@@ -2014,7 +2039,7 @@
                 renderCategoriasNav(categoriasCache);
                 renderCategoriasFiltros(categoriasCache);
             } catch (e) {
-                console.error('Erro ao carregar categorias:', e);
+                console.warn('Erro ao carregar categorias:', e);
             }
         }
 
@@ -2104,7 +2129,7 @@
                 atualizarBotaoLimparBusca();
                 fecharMenuMobile();
             } catch (e) {
-                console.error('Erro na busca:', e);
+                console.warn('Erro na busca:', e);
             }
         }
 
@@ -2162,7 +2187,7 @@
                         </div>
                     `);
                 } catch (err) {
-                    console.error(`Erro ao carregar clima de ${cidade.nome}:`, err);
+                    console.warn(`Erro ao carregar clima de ${cidade.nome}:`, err);
                     cards.push(`<div class="clima-card"><h4>${cidade.nome}</h4><div class="clima-error">Não foi possível obter o clima.</div></div>`);
                 }
             }
@@ -2371,7 +2396,7 @@
                 }).join('');
 
             } catch (err) {
-                console.error('Erro ao carregar histórico Mega Sena:', err);
+                console.warn('Erro ao carregar histórico Mega Sena:', err);
                 megaHistory.innerHTML = '';
                 megaError.textContent = 'Não foi possível carregar histórico.';
             }
@@ -2380,16 +2405,35 @@
         function carregarSecundarios() {
             const agendar = window.requestIdleCallback || ((callback) => setTimeout(callback, 900));
 
-            agendar(() => {
-                setTimeout(carregarClima, 250);
-                setTimeout(carregarMegaSena, 600);
+            let carregou = false;
+            const iniciar = () => {
+                if (carregou) return;
+                carregou = true;
+                agendar(() => {
+                    setTimeout(carregarClima, 250);
+                    setTimeout(carregarMegaSena, 600);
 
-                // Atualiza Mega Sena automaticamente a cada 30 minutos
-                setInterval(() => {
-                    console.log('Atualizando Mega Sena automaticamente...');
-                    carregarMegaSena();
-                }, 30 * 60 * 1000); // 30 minutos em milissegundos
-            });
+                    setInterval(() => {
+                        console.log('Atualizando Mega Sena automaticamente...');
+                        carregarMegaSena();
+                    }, 30 * 60 * 1000);
+                });
+            };
+
+            const secao = document.getElementById('clima-mega-section');
+            if (!secao || !('IntersectionObserver' in window)) {
+                setTimeout(iniciar, 4000);
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries.some(entry => entry.isIntersecting)) {
+                    observer.disconnect();
+                    iniciar();
+                }
+            }, { rootMargin: '300px 0px' });
+
+            observer.observe(secao);
         }
 
         // Carrega as notícias assim que o HTML fica pronto
