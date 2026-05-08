@@ -32,11 +32,17 @@
             box-sizing: border-box;
         }
 
+        html {
+            background: #0a0f17;
+            min-height: 100%;
+        }
+
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0a0f17 0%, #161b24 100%);
             color: #ebeef2;
             min-height: 100vh;
+            overscroll-behavior-y: none;
         }
 
         .sr-only {
@@ -952,7 +958,7 @@
         footer {
             background: linear-gradient(135deg, #070b10, #0d141d);
             color: #dfe7e1;
-            padding: 44px 20px 28px;
+            padding: 44px 20px calc(56px + env(safe-area-inset-bottom, 0px));
             margin-top: 50px;
             border-top: 2px solid rgba(0, 204, 0, 0.35);
         }
@@ -1071,7 +1077,7 @@
             max-width: 1200px;
             margin: 24px auto 0;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 16px;
+            padding-top: 18px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
