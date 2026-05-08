@@ -35,6 +35,7 @@
         html {
             background: #0a0f17;
             min-height: 100%;
+            overscroll-behavior: none;
         }
 
         body {
@@ -42,7 +43,8 @@
             background: linear-gradient(135deg, #0a0f17 0%, #161b24 100%);
             color: #ebeef2;
             min-height: 100vh;
-            overscroll-behavior-y: none;
+            min-height: 100dvh;
+            overscroll-behavior: none;
         }
 
         .sr-only {
@@ -1802,6 +1804,29 @@
             }
         }
 
+        function travarBounceSafari() {
+            let touchStartY = 0;
+
+            window.addEventListener('touchstart', (event) => {
+                if (event.touches.length !== 1) return;
+                touchStartY = event.touches[0].clientY;
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (event) => {
+                if (event.touches.length !== 1 || document.body.classList.contains('modal-open')) return;
+
+                const touchY = event.touches[0].clientY;
+                const puxandoParaBaixo = touchY > touchStartY;
+                const puxandoParaCima = touchY < touchStartY;
+                const topo = window.scrollY <= 0;
+                const fim = Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight;
+
+                if ((topo && puxandoParaBaixo) || (fim && puxandoParaCima)) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+        }
+
         let categoriasCache = [];
 
         function normalizarTexto(value) {
@@ -2263,6 +2288,7 @@
         // Carrega as notícias assim que o HTML fica pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Página pronta, iniciando carregamento rápido de notícias...');
+            travarBounceSafari();
             atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
             carregarTodas();
