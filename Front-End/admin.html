@@ -839,6 +839,8 @@
                 Notícias</button>
             <button class="menu-btn" onclick="mudarAba('anuncios')"><i class="fas fa-bullhorn"></i>
                 Anúncios/Banners</button>
+            <button class="menu-btn" onclick="mudarAba('categorias')"><i class="fas fa-tags"></i>
+                Categorias</button>
             <a href="index.html" style="text-decoration: none;"><button class="menu-btn" style="cursor: pointer;"><i
                         class="fas fa-arrow-left"></i> Voltar</button></a>
         </div>
@@ -946,7 +948,6 @@
                             <option value="">Selecione a posição</option>
                             <option value="topo">Topo (Grande)</option>
                             <option value="meio">Meio (Grande)</option>
-                            <option value="lateral">Lateral (Sidebar)</option>
                             <option value="rodape">Rodapé</option>
                         </select>
                     </div>
@@ -1009,6 +1010,39 @@
                         </tr>
                     </thead>
                     <tbody id="anunciosTabela"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CATEGORIAS -->
+        <div id="categorias" class="section">
+            <h2><i class="fas fa-tags"></i> Gerenciar Categorias</h2>
+            <button class="btn-add" onclick="abrirFormCategoria()"><i class="fas fa-plus"></i> Nova Categoria</button>
+
+            <div id="formCategoria" class="form-card">
+                <h3><i class="fas fa-edit"></i> Criar/Editar Categoria</h3>
+                <form id="formulario-categoria" onsubmit="salvarCategoria(event)">
+                    <input type="hidden" id="categoria-id">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Nome da Categoria *</label>
+                        <input type="text" id="categoria-nome" required placeholder="Ex: Esportes">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+                        <button type="button" onclick="fecharFormCategoria()" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome da Categoria</th>
+                            <th style="width: 200px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriasTabela"></tbody>
                 </table>
             </div>
         </div>
@@ -1248,6 +1282,7 @@
                                 <td>${c.nome}</td>
                                 <td>
                                     <div class="action-buttons">
+                                        <button class="btn-small btn-edit" onclick="editarCategoria('${c._id}', '${c.nome}')"><i class="fas fa-edit"></i> Editar</button>
                                         <button class="btn-small btn-delete" onclick="deletarCategoria('${c._id}', '${c.nome}')"><i class="fas fa-trash"></i> Deletar</button>
                                     </div>
                                 </td>
@@ -1554,26 +1589,44 @@
         }
 
         // ==== CATEGORIAS ====
+        function abrirFormCategoria() {
+            document.getElementById('categoria-id').value = '';
+            document.getElementById('categoria-nome').value = '';
+            document.getElementById('formCategoria').classList.add('visible');
+        }
+
+        function fecharFormCategoria() {
+            document.getElementById('formCategoria').classList.remove('visible');
+        }
+
+        function editarCategoria(id, nome) {
+            document.getElementById('categoria-id').value = id;
+            document.getElementById('categoria-nome').value = nome;
+            document.getElementById('formCategoria').classList.add('visible');
+            document.getElementById('formCategoria').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         async function salvarCategoria(e) {
             e.preventDefault();
-            const input = document.getElementById('categoriaNome');
+            const input = document.getElementById('categoria-nome');
             const nome = input.value.trim();
+            const id = document.getElementById('categoria-id').value;
             if (!nome) return;
 
             try {
-                const res = await fetch(`${API_URL}/categorias`, {
-                    method: 'POST',
+                const res = await fetch(id ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`, {
+                    method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome })
                 });
 
                 if (res.ok) {
-                    showNotification('Categoria adicionada!', 'success');
-                    input.value = '';
+                    showNotification(id ? 'Categoria atualizada!' : 'Categoria adicionada!', 'success');
+                    fecharFormCategoria();
                     carregarCategorias();
                 } else {
                     const data = await res.json().catch(() => ({}));
-                    showNotification(data.erro || 'Erro ao adicionar categoria', 'error');
+                    showNotification(data.erro || 'Erro ao salvar categoria', 'error');
                 }
             } catch (e) {
                 showNotification('Erro: ' + e.message, 'error');

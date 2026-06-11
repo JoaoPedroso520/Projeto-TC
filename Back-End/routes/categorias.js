@@ -61,4 +61,36 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Atualizar categoria
+router.put('/:id', async (req, res) => {
+  try {
+    const nome = String(req.body.nome || '').trim();
+    if (!nome) {
+      return res.status(400).json({ erro: 'Nome da categoria é obrigatório' });
+    }
+
+    const categoriaAntiga = await Categoria.findById(req.params.id);
+    if (!categoriaAntiga) {
+      return res.status(404).json({ erro: 'Categoria não encontrada' });
+    }
+
+    const nomeAntigo = categoriaAntiga.nome;
+
+    const existente = await Categoria.findOne({ _id: { $ne: req.params.id }, nome: new RegExp(`^${escapeRegex(nome)}$`, 'i') });
+    if (existente) {
+      return res.status(409).json({ erro: 'Categoria já existe' });
+    }
+
+    categoriaAntiga.nome = nome;
+    await categoriaAntiga.save();
+
+    const Noticia = require('../models/Noticia');
+    await Noticia.updateMany({ categoria: nomeAntigo }, { $set: { categoria: nome } });
+
+    res.json(categoriaAntiga);
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro ao atualizar categoria' });
+  }
+});
+
 module.exports = router;
