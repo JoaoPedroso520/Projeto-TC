@@ -2045,7 +2045,7 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/categorias`);
+                const res = await fetch(`${API_URL}/categorias?ativas=true`);
                 const data = await res.json();
                 categoriasCache = (data || []).map(c => c.nome || c);
                 setCache(CATEGORIAS_CACHE_KEY, categoriasCache);

@@ -9,6 +9,18 @@ function escapeRegex(text) {
 // Listar categorias
 router.get('/', async (req, res) => {
   try {
+    if (req.query.ativas === 'true') {
+      const Noticia = require('../models/Noticia');
+      const categoriasAtivas = await Noticia.distinct('categoria', { ativo: true });
+      
+      // Retornar os objetos de Categoria cujo nome está em categoriasAtivas
+      const categorias = await Categoria.find({ 
+        nome: { $in: categoriasAtivas.map(c => new RegExp(`^${escapeRegex(c)}$`, 'i')) } 
+      }).sort({ nome: 1 });
+      
+      return res.json(categorias);
+    }
+
     const categorias = await Categoria.find().sort({ nome: 1 });
     res.json(categorias);
   } catch (erro) {

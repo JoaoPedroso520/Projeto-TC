@@ -1174,12 +1174,11 @@
                     carregarCategorias();
                     carregarNoticias();
                     carregarAnuncios();
-                } else {
+                } else if (res.status === 401) {
                     localStorage.removeItem('adminToken');
                 }
             } catch (err) {
-                console.warn('verificarSessao: falha na verificação de token', err);
-                localStorage.removeItem('adminToken');
+                console.warn('verificarSessao: falha na verificação de token, mantendo sessão ativa localmente', err);
             }
         }
 

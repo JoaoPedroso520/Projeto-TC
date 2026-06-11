@@ -109,8 +109,8 @@ function criarLinhaNoticias(noticia) {
         <td>${dataFormatada}</td>
         <td>
             <div class="acoes">
-                <button class="btn btn-editar" onclick="editarNoticia('${noticia._id}')">Editar</button>
-                <button class="btn btn-deletar" onclick="confirmarDelecao('noticia', '${noticia._id}', '${noticia.titulo}')">Deletar</button>
+                <button class="btn btn-editar" onclick="editarNoticia('${noticia._id}')"><i class="fas fa-edit"></i> Editar</button>
+                <button class="btn btn-deletar" onclick="confirmarDelecao('noticia', '${noticia._id}', '${noticia.titulo}')"><i class="fas fa-trash"></i> Excluir</button>
             </div>
         </td>
     `;
@@ -245,8 +245,8 @@ function criarLinhaAnuncios(anuncio) {
         <td>${anuncio.cliques}</td>
         <td>
             <div class="acoes">
-                <button class="btn btn-editar" onclick="editarAnuncio('${anuncio._id}')">Editar</button>
-                <button class="btn btn-deletar" onclick="confirmarDelecao('anuncio', '${anuncio._id}', '${anuncio.titulo}')">Deletar</button>
+                <button class="btn btn-editar" onclick="editarAnuncio('${anuncio._id}')"><i class="fas fa-edit"></i> Editar</button>
+                <button class="btn btn-deletar" onclick="confirmarDelecao('anuncio', '${anuncio._id}', '${anuncio.titulo}')"><i class="fas fa-trash"></i> Excluir</button>
             </div>
         </td>
     `;
