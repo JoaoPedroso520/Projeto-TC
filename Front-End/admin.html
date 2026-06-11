@@ -1367,7 +1367,12 @@
 
         function previewFotoNoticia(event) {
             const file = event.target.files[0];
-            if (file && file.size < 5 * 1024 * 1024) {
+            if (file) {
+                if (file.size >= 5 * 1024 * 1024) {
+                    showNotification('A imagem deve ter menos de 5MB', 'warning');
+                    event.target.value = '';
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     document.getElementById('noticia-preview-img').src = e.target.result;
@@ -1394,6 +1399,12 @@
 
             const id = document.getElementById('noticiaId').value;
 
+            if (!dados.foto) {
+                showNotification('Por favor, selecione uma imagem para a notícia', 'warning');
+                btn.disabled = false;
+                return;
+            }
+
             try {
                 const res = await fetch(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
                     method: id ? 'PUT' : 'POST',
@@ -1406,7 +1417,9 @@
                     fecharFormNoticia();
                     carregarNoticias();
                 } else {
-                    showNotification('Erro ao salvar', 'error');
+                    const errorData = await res.json().catch(() => ({}));
+                    showNotification(errorData.erro || 'Erro ao salvar notícia', 'error');
+                    console.error('Erro backend:', errorData);
                 }
             } catch (e) {
                 showNotification('Erro: ' + e.message, 'error');
@@ -1516,7 +1529,12 @@
 
         function previewFotoAnuncio(event) {
             const file = event.target.files[0];
-            if (file && file.size < 5 * 1024 * 1024) {
+            if (file) {
+                if (file.size >= 5 * 1024 * 1024) {
+                    showNotification('A imagem deve ter menos de 5MB', 'warning');
+                    event.target.value = '';
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     document.getElementById('anuncio-preview-img').src = e.target.result;
@@ -1547,6 +1565,12 @@
 
             const id = document.getElementById('anuncioId').value;
 
+            if (!dados.foto) {
+                showNotification('Por favor, selecione uma imagem para o anúncio', 'warning');
+                btn.disabled = false;
+                return;
+            }
+
             try {
                 const res = await fetch(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
                     method: id ? 'PUT' : 'POST',
@@ -1559,7 +1583,9 @@
                     fecharFormAnuncio();
                     carregarAnuncios();
                 } else {
-                    showNotification('Erro ao salvar', 'error');
+                    const errorData = await res.json().catch(() => ({}));
+                    showNotification(errorData.erro || 'Erro ao salvar anúncio', 'error');
+                    console.error('Erro backend:', errorData);
                 }
             } catch (e) {
                 showNotification('Erro: ' + e.message, 'error');
