@@ -3100,18 +3100,18 @@
 
         // ESPORTES
         const timesBrasileiros = [
-            { id: '134287', nome: 'Flamengo', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/syptwx1473538074.png', tipo: 'Série A' },
-            { id: '134465', nome: 'Palmeiras', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/vsqwqp1473538105.png', tipo: 'Série A' },
-            { id: '134291', nome: 'São Paulo', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/sxpupx1473538135.png', tipo: 'Série A' },
-            { id: '134284', nome: 'Corinthians', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/vvuvps1473538042.png', tipo: 'Série A' },
-            { id: '134296', nome: 'Fluminense', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/stvvwp1473538082.png', tipo: 'Série A' },
-            { id: '134288', nome: 'Grêmio', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/uvpwyt1473538089.png', tipo: 'Série A' },
-            { id: '134281', nome: 'Internacional', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/yprvxx1473538097.png', tipo: 'Série A' },
-            { id: '134299', nome: 'Atlético-MG', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/x5lixs1743742872.png', tipo: 'Série A' },
-            { id: '134294', nome: 'Cruzeiro', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/upsvvu1473538059.png', tipo: 'Série A' },
-            { id: '134285', nome: 'Botafogo', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/bs5mbw1733004596.png', tipo: 'Série A' },
-            { id: '134282', nome: 'Vasco', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/ynqlxo1630521109.png', tipo: 'Série A' },
-            { id: '134286', nome: 'Santos', escudo: 'https://r2.thesportsdb.com/images/media/team/badge/j8xk9g1679447486.png', tipo: 'Série B' }
+            { id: '819', nome: 'Flamengo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/819.png', tipo: 'Série A' },
+            { id: '2029', nome: 'Palmeiras', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2029.png', tipo: 'Série A' },
+            { id: '2026', nome: 'São Paulo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2026.png', tipo: 'Série A' },
+            { id: '874', nome: 'Corinthians', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/874.png', tipo: 'Série A' },
+            { id: '3445', nome: 'Fluminense', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3445.png', tipo: 'Série A' },
+            { id: '6273', nome: 'Grêmio', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6273.png', tipo: 'Série A' },
+            { id: '1936', nome: 'Internacional', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1936.png', tipo: 'Série A' },
+            { id: '7632', nome: 'Atlético-MG', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7632.png', tipo: 'Série A' },
+            { id: '2022', nome: 'Cruzeiro', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2022.png', tipo: 'Série A' },
+            { id: '6086', nome: 'Botafogo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6086.png', tipo: 'Série A' },
+            { id: '3454', nome: 'Vasco', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3454.png', tipo: 'Série A' },
+            { id: '2674', nome: 'Santos', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2674.png', tipo: 'Série B' }
         ];
 
         let timesFavoritos = JSON.parse(getStorage().getItem('c7-times-favoritos') || '[]');
@@ -3220,72 +3220,58 @@
             const container = document.getElementById('timeJogosContainer');
             if (!timeModalAtual) return;
 
-            container.innerHTML = '<div class="jogos-loading"><i class="fas fa-spinner fa-spin"></i> Carregando jogos...</div>';
+            container.innerHTML = '<div class="jogos-loading"><i class="fas fa-spinner fa-spin"></i> Carregando jogos reais da ESPN...</div>';
 
             try {
-                // Endpoint TheSportsDB: Past Events (eventslast.php) ou Next Events (eventsnext.php)
-                // Usando chave 3 (free/test)
-                const endpoint = tabAtual === 'ultimos' 
-                    ? `https://www.thesportsdb.com/api/v1/json/3/eventslast.php?id=${timeModalAtual.id}`
-                    : `https://www.thesportsdb.com/api/v1/json/3/eventsnext.php?id=${timeModalAtual.id}`;
-
+                // Endpoint aberto da ESPN
+                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/teams/${timeModalAtual.id}/schedule`;
                 const response = await fetch(endpoint);
                 const data = await response.json();
                 
-                let events = data.results || data.events || [];
+                let events = data.events || [];
+                const agora = new Date();
 
-                // O plano grátis (chave 3) do TheSportsDB retorna apenas 1 resultado de teste.
-                // Para exibir "todos os jogos" visualmente, vamos preencher com histórico simulado baseado no retornado.
-                if (events.length === 1) {
-                    const baseEvent = events[0];
-                    const eventDate = new Date(baseEvent.strTimestamp || baseEvent.dateEvent || Date.now());
-                    
-                    const simulatedEvents = [];
-                    simulatedEvents.push(baseEvent); // O real
-
-                    for (let i = 1; i < 5; i++) {
-                        const newDate = new Date(eventDate);
-                        if (tabAtual === 'ultimos') {
-                            newDate.setDate(newDate.getDate() - (i * 7)); // -1 semana por jogo
-                        } else {
-                            newDate.setDate(newDate.getDate() + (i * 7)); // +1 semana por jogo
-                        }
-                        
-                        // Oponente aleatório
-                        const oponenteId = timesBrasileiros[Math.floor(Math.random() * timesBrasileiros.length)];
-                        
-                        simulatedEvents.push({
-                            ...baseEvent,
-                            strHomeTeam: (i % 2 === 0) ? timeModalAtual.nome : oponenteId.nome,
-                            strAwayTeam: (i % 2 === 0) ? oponenteId.nome : timeModalAtual.nome,
-                            intHomeScore: tabAtual === 'ultimos' ? Math.floor(Math.random() * 4) : null,
-                            intAwayScore: tabAtual === 'ultimos' ? Math.floor(Math.random() * 3) : null,
-                            dateEvent: newDate.toISOString().split('T')[0],
-                            strTimestamp: newDate.toISOString()
-                        });
-                    }
-                    events = simulatedEvents;
+                // Filtrar os eventos de acordo com a aba selecionada (ultimos ou proximos)
+                if (tabAtual === 'ultimos') {
+                    events = events.filter(e => {
+                        const date = new Date(e.date);
+                        return date <= agora && e.competitions[0].status.type.completed;
+                    }).reverse().slice(0, 10); // Últimos 10 jogos
+                } else {
+                    events = events.filter(e => {
+                        const date = new Date(e.date);
+                        return date > agora || !e.competitions[0].status.type.completed;
+                    }).slice(0, 10); // Próximos 10 jogos
                 }
 
                 if (events.length === 0) {
-                    container.innerHTML = '<div class="notif-empty">Nenhum jogo encontrado.</div>';
+                    container.innerHTML = '<div class="notif-empty">Nenhum jogo encontrado para esta aba.</div>';
                     return;
                 }
 
                 container.innerHTML = events.map(jogo => {
-                    const dataJogo = new Date(jogo.strTimestamp || jogo.dateEvent);
-                    const formatada = isNaN(dataJogo.getTime()) ? jogo.dateEvent : dataJogo.toLocaleDateString('pt-BR') + ' ' + (jogo.strTime ? jogo.strTime.substring(0, 5) : '');
+                    const comp = jogo.competitions[0];
+                    const homeTeam = comp.competitors.find(c => c.homeAway === 'home');
+                    const awayTeam = comp.competitors.find(c => c.homeAway === 'away');
                     
-                    const placar = tabAtual === 'ultimos' 
-                        ? `${jogo.intHomeScore || 0} - ${jogo.intAwayScore || 0}`
-                        : 'vs';
+                    const dataJogo = new Date(jogo.date);
+                    const formatada = dataJogo.toLocaleDateString('pt-BR') + ' ' + dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    let placar = 'vs';
+                    if (tabAtual === 'ultimos' && homeTeam.score && awayTeam.score) {
+                        placar = `${homeTeam.score.displayValue} - ${awayTeam.score.displayValue}`;
+                    } else if (comp.status.type.state === 'in') {
+                        placar = `${homeTeam.score.displayValue} - ${awayTeam.score.displayValue} (Ao vivo)`;
+                    }
+
+                    const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '') : 'Campeonato Brasileiro';
 
                     return `
                         <div class="jogo-card">
-                            <div class="jogo-time-nome" style="text-align: right;">${jogo.strHomeTeam}</div>
+                            <div class="jogo-time-nome" style="text-align: right;">${homeTeam.team.displayName}</div>
                             <div class="jogo-placar">${placar}</div>
-                            <div class="jogo-time-nome">${jogo.strAwayTeam}</div>
-                            <div class="jogo-data">${formatada}<br>${jogo.strLeague || ''}</div>
+                            <div class="jogo-time-nome">${awayTeam.team.displayName}</div>
+                            <div class="jogo-data">${formatada}<br>${campeonato}</div>
                         </div>
                     `;
                 }).join('');
