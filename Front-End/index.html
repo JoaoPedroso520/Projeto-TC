@@ -1332,6 +1332,499 @@
                 font-size: 22px;
             }
         }
+
+        /* NOTIFICAÇÃO BELL */
+        .notif-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .notif-bell-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 204, 0, 0.45);
+            background: rgba(0, 0, 0, 0.45);
+            color: #00cc00;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .notif-bell-btn:hover {
+            background: rgba(0, 204, 0, 0.15);
+            border-color: #00ff00;
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ff3b3b;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 2px 8px rgba(255, 59, 59, 0.5);
+            animation: notifPulse 2s ease-in-out infinite;
+        }
+
+        .notif-badge.hidden {
+            display: none;
+        }
+
+        @keyframes notifPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .notif-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 340px;
+            max-height: 420px;
+            background: #111;
+            border: 1px solid rgba(0, 204, 0, 0.45);
+            border-radius: 14px;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            overflow: hidden;
+            animation: notifSlideIn 0.25s ease;
+        }
+
+        .notif-panel.open {
+            display: block;
+        }
+
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notif-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(0, 204, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 204, 0, 0.05);
+        }
+
+        .notif-panel-header h4 {
+            color: #00cc00;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .notif-clear-btn {
+            background: transparent;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .notif-panel-body {
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .notif-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notif-item:hover {
+            background: rgba(0, 204, 0, 0.08);
+        }
+
+        .notif-item.unread {
+            border-left: 3px solid #00cc00;
+        }
+
+        .notif-item-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .notif-item-time {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .notif-item-icon {
+            display: inline-block;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+
+        .notif-item-icon.news { color: #00cc00; }
+        .notif-item-icon.sport { color: #ffd700; }
+
+        .notif-empty {
+            padding: 30px 16px;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* ESPORTES WIDGET */
+        .esportes-widget {
+            background: #0d0d0d;
+            border: 2px solid #00cc00;
+            border-radius: 14px;
+            padding: 20px;
+            margin: 0 0 24px;
+            width: 100%;
+        }
+
+        .esportes-widget h3 {
+            color: #00cc00;
+            font-size: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .esportes-times-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .esporte-time-card {
+            background: linear-gradient(135deg, #131a23 0%, #0d121b 100%);
+            border: 1px solid rgba(0, 204, 0, 0.2);
+            border-radius: 12px;
+            padding: 14px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: center;
+        }
+
+        .esporte-time-card:hover {
+            transform: translateY(-4px);
+            border-color: #00ff00;
+            box-shadow: 0 10px 30px rgba(0, 204, 0, 0.3);
+        }
+
+        .esporte-time-card img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .esporte-time-nome {
+            font-size: 11px;
+            font-weight: 600;
+            color: #ccc;
+            line-height: 1.2;
+        }
+
+        .esporte-fav-star {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            z-index: 5;
+        }
+
+        .esporte-fav-star.favorito {
+            color: #ffd700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+
+        .esporte-fav-star:hover {
+            transform: scale(1.3);
+        }
+
+        /* MODAL TIME */
+        .time-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 1100;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 60px 16px;
+            overflow-y: auto;
+        }
+
+        .time-modal.active {
+            display: flex;
+        }
+
+        .time-modal-content {
+            background: linear-gradient(135deg, #111 0%, #1a1a2e 100%);
+            padding: 28px;
+            border-radius: 16px;
+            max-width: 700px;
+            width: 100%;
+            border: 2px solid #00cc00;
+            box-shadow: 0 20px 60px rgba(0, 204, 0, 0.25);
+            position: relative;
+        }
+
+        .time-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 22px;
+            cursor: pointer;
+            color: #ff4d4f;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 0;
+            transition: color 0.2s;
+        }
+
+        .time-modal-close:hover {
+            color: #ff6b6b;
+        }
+
+        .time-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0, 204, 0, 0.2);
+        }
+
+        .time-modal-header img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .time-modal-header h2 {
+            color: #00cc00;
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .time-modal-header .time-info-extra {
+            color: #999;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .time-modal-fav-btn {
+            margin-left: auto;
+            background: rgba(0, 204, 0, 0.1);
+            border: 1px solid rgba(0, 204, 0, 0.35);
+            color: #00cc00;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .time-modal-fav-btn.favorito {
+            background: rgba(255, 215, 0, 0.15);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .time-modal-fav-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .time-tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .time-tab-btn {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 204, 0, 0.25);
+            background: rgba(0, 204, 0, 0.08);
+            color: #ccc;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .time-tab-btn.active {
+            background: #00cc00;
+            color: #000;
+            border-color: #00ff00;
+        }
+
+        .time-tab-content {
+            min-height: 180px;
+        }
+
+        .jogo-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 204, 0, 0.15);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .jogo-card:hover {
+            border-color: rgba(0, 204, 0, 0.4);
+        }
+
+        .jogo-card img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .jogo-time-nome {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e0e0e0;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .jogo-placar {
+            font-size: 18px;
+            font-weight: 800;
+            color: #00ff00;
+            padding: 0 8px;
+            white-space: nowrap;
+        }
+
+        .jogo-data {
+            font-size: 11px;
+            color: #888;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .jogo-vs {
+            font-size: 12px;
+            color: #666;
+            font-weight: 700;
+        }
+
+        .jogos-loading {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .notif-panel {
+                width: 300px;
+                right: -40px;
+            }
+
+            .esportes-times-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 8px;
+            }
+
+            .esporte-time-card img {
+                width: 38px;
+                height: 38px;
+            }
+
+            .esporte-time-nome {
+                font-size: 10px;
+            }
+
+            .time-modal-content {
+                padding: 20px;
+            }
+
+            .time-modal-header {
+                flex-wrap: wrap;
+            }
+
+            .time-modal-fav-btn {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .time-tab-btn {
+                font-size: 11px;
+                padding: 8px 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .notif-panel {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-height: 50vh;
+                border-radius: 14px 14px 0 0;
+            }
+
+            .esportes-times-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .time-modal {
+                padding: 20px 10px;
+            }
+        }
     </style>
 </head>
 
@@ -1362,6 +1855,21 @@
                         <i class="fas fa-times"></i>
                     </button>
                     <button onclick="fazerBusca()"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+                <div class="notif-wrapper">
+                    <button class="notif-bell-btn" id="notifBellBtn" type="button" aria-label="Notificações" onclick="toggleNotifPanel()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge hidden" id="notifBadge">0</span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-panel-header">
+                            <h4><i class="fas fa-bell"></i> Notificações</h4>
+                            <button class="notif-clear-btn" onclick="limparNotificacoes()">Limpar tudo</button>
+                        </div>
+                        <div class="notif-panel-body" id="notifPanelBody">
+                            <div class="notif-empty">Nenhuma notificação</div>
+                        </div>
+                    </div>
                 </div>
             </nav>
         </div>
@@ -1402,7 +1910,16 @@
 
     <section class="section-block" id="clima-mega-section">
         <div class="section-inner">
-            <h2 class="sr-only">Clima e Mega Sena</h2>
+            <h2 class="sr-only">Esportes, Clima e Mega Sena</h2>
+
+            <!-- ESPORTES -->
+            <div class="esportes-widget" id="esportesWidget">
+                <h3><i class="fas fa-futbol"></i> Esportes</h3>
+                <div class="esportes-times-grid" id="esportesTimesGrid">
+                    <p style="grid-column: 1/-1; text-align: center; padding: 20px; color: #888;"><i class="fas fa-spinner fa-spin"></i> Carregando times...</p>
+                </div>
+            </div>
+
             <!-- CLIMA -->
             <div class="clima-widget" id="climaWidget">
                 <h3><i class="fas fa-cloud-sun"></i> Previsão do Tempo - Vale do Ivaí</h3>
@@ -1453,6 +1970,31 @@
             <div id="modal-body"></div>
         </div>
     </div>
+
+    <!-- MODAL TIME -->
+    <div class="time-modal" id="timeModal">
+        <div class="time-modal-content" role="dialog" aria-modal="true">
+            <button class="time-modal-close" onclick="fecharTimeModal()"><i class="fas fa-times"></i></button>
+            <div class="time-modal-header">
+                <img id="timeModalEscudo" src="" alt="">
+                <div>
+                    <h2 id="timeModalNome">Nome do Time</h2>
+                    <div class="time-info-extra" id="timeModalExtra">Futebol Brasileiro</div>
+                </div>
+                <button class="time-modal-fav-btn" id="timeModalFavBtn" onclick="toggleFavoritoModal()">
+                    <i class="far fa-star"></i> Favoritar
+                </button>
+            </div>
+            <div class="time-tab-bar">
+                <button class="time-tab-btn active" onclick="mudarTimeTab('ultimos')" id="tabUltimos">Últimos Jogos</button>
+                <button class="time-tab-btn" onclick="mudarTimeTab('proximos')" id="tabProximos">Próximos Jogos</button>
+            </div>
+            <div class="time-tab-content">
+                <div id="timeJogosContainer"></div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <h2 class="sr-only">Rodape</h2>
         <h3 class="sr-only">Links do rodape</h3>
@@ -2449,15 +2991,322 @@
             observer.observe(secao);
         }
 
+        // NOTIFICAÇÕES
+        let notificacoes = JSON.parse(getStorage().getItem('c7-notificacoes') || '[]');
+        let unreadCount = notificacoes.filter(n => !n.lida).length;
+
+        function salvarNotificacoes() {
+            getStorage().setItem('c7-notificacoes', JSON.stringify(notificacoes));
+            atualizarBadgeNotificacoes();
+            renderNotificacoes();
+        }
+
+        function adicionarNotificacao(titulo, tipo = 'news', data = new Date()) {
+            // Evitar duplicatas recentes
+            if (notificacoes.some(n => n.titulo === titulo && (Date.now() - new Date(n.data).getTime()) < 3600000)) return;
+
+            notificacoes.unshift({
+                id: Date.now().toString(),
+                titulo,
+                tipo,
+                data: data.toISOString(),
+                lida: false
+            });
+            
+            // Manter apenas as últimas 50
+            if (notificacoes.length > 50) notificacoes = notificacoes.slice(0, 50);
+            
+            unreadCount++;
+            salvarNotificacoes();
+        }
+
+        function atualizarBadgeNotificacoes() {
+            const badge = document.getElementById('notifBadge');
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function toggleNotifPanel() {
+            const panel = document.getElementById('notifPanel');
+            const isOpen = panel.classList.contains('open');
+            
+            if (isOpen) {
+                panel.classList.remove('open');
+            } else {
+                panel.classList.add('open');
+                renderNotificacoes();
+                // Marcar como lidas ao abrir
+                if (unreadCount > 0) {
+                    notificacoes.forEach(n => n.lida = true);
+                    unreadCount = 0;
+                    salvarNotificacoes();
+                }
+            }
+        }
+
+        function limparNotificacoes() {
+            notificacoes = [];
+            unreadCount = 0;
+            salvarNotificacoes();
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " anos atrás";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " meses atrás";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " dias atrás";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " horas atrás";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutos atrás";
+            return Math.floor(seconds) + " segundos atrás";
+        }
+
+        function renderNotificacoes() {
+            const container = document.getElementById('notifPanelBody');
+            if (notificacoes.length === 0) {
+                container.innerHTML = '<div class="notif-empty">Nenhuma notificação no momento.</div>';
+                return;
+            }
+
+            container.innerHTML = notificacoes.map(n => `
+                <div class="notif-item ${n.lida ? '' : 'unread'}" onclick="toggleNotifPanel()">
+                    <div class="notif-item-title">
+                        <i class="fas ${n.tipo === 'sport' ? 'fa-futbol sport' : 'fa-newspaper news'} notif-item-icon"></i>
+                        ${n.titulo}
+                    </div>
+                    <div class="notif-item-time">${formatTimeAgo(n.data)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Fechar painel ao clicar fora
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notifPanel');
+            const btn = document.getElementById('notifBellBtn');
+            if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+
+        // ESPORTES
+        const timesBrasileiros = [
+            { id: '133704', nome: 'Flamengo', escudo: 'https://www.thesportsdb.com/images/media/team/badge/h6kuh71624632836.png', tipo: 'Série A' },
+            { id: '133724', nome: 'Palmeiras', escudo: 'https://www.thesportsdb.com/images/media/team/badge/1k8h6q1514068305.png', tipo: 'Série A' },
+            { id: '133739', nome: 'São Paulo', escudo: 'https://www.thesportsdb.com/images/media/team/badge/5kndol1624632788.png', tipo: 'Série A' },
+            { id: '133702', nome: 'Corinthians', escudo: 'https://www.thesportsdb.com/images/media/team/badge/sxsxtx1473539824.png', tipo: 'Série A' },
+            { id: '133705', nome: 'Fluminense', escudo: 'https://www.thesportsdb.com/images/media/team/badge/1x0q5i1514069795.png', tipo: 'Série A' },
+            { id: '133737', nome: 'Grêmio', escudo: 'https://www.thesportsdb.com/images/media/team/badge/yqwutu1448819875.png', tipo: 'Série A' },
+            { id: '133738', nome: 'Internacional', escudo: 'https://www.thesportsdb.com/images/media/team/badge/r1p50a1624632688.png', tipo: 'Série A' },
+            { id: '133714', nome: 'Atlético-MG', escudo: 'https://www.thesportsdb.com/images/media/team/badge/usptut1448819694.png', tipo: 'Série A' },
+            { id: '133715', nome: 'Cruzeiro', escudo: 'https://www.thesportsdb.com/images/media/team/badge/qvrxsp1448819717.png', tipo: 'Série A' },
+            { id: '133703', nome: 'Botafogo', escudo: 'https://www.thesportsdb.com/images/media/team/badge/2e086s1514069876.png', tipo: 'Série A' },
+            { id: '133706', nome: 'Vasco', escudo: 'https://www.thesportsdb.com/images/media/team/badge/1r994t1624632882.png', tipo: 'Série A' },
+            { id: '133725', nome: 'Santos', escudo: 'https://www.thesportsdb.com/images/media/team/badge/vvwyq01514068393.png', tipo: 'Série B' }
+        ];
+
+        let timesFavoritos = JSON.parse(getStorage().getItem('c7-times-favoritos') || '[]');
+        let timeModalAtual = null;
+        let tabAtual = 'ultimos';
+
+        function salvarFavoritos() {
+            getStorage().setItem('c7-times-favoritos', JSON.stringify(timesFavoritos));
+        }
+
+        function toggleFavorito(id, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            if (timesFavoritos.includes(id)) {
+                timesFavoritos = timesFavoritos.filter(t => t !== id);
+            } else {
+                timesFavoritos.push(id);
+                const time = timesBrasileiros.find(t => t.id === id);
+                if (time) {
+                    adicionarNotificacao(`Você favoritou o ${time.nome}. Receberá notificações sobre resultados.`, 'sport');
+                }
+            }
+            salvarFavoritos();
+            renderEsportes();
+            if (timeModalAtual && timeModalAtual.id === id) {
+                atualizarBtnFavoritoModal();
+            }
+        }
+
+        function toggleFavoritoModal() {
+            if (timeModalAtual) {
+                toggleFavorito(timeModalAtual.id, null);
+            }
+        }
+
+        function atualizarBtnFavoritoModal() {
+            const btn = document.getElementById('timeModalFavBtn');
+            const icon = btn.querySelector('i');
+            if (timesFavoritos.includes(timeModalAtual.id)) {
+                btn.classList.add('favorito');
+                icon.className = 'fas fa-star';
+                btn.innerHTML = '<i class="fas fa-star"></i> Favorito';
+            } else {
+                btn.classList.remove('favorito');
+                icon.className = 'far fa-star';
+                btn.innerHTML = '<i class="far fa-star"></i> Favoritar';
+            }
+        }
+
+        function renderEsportes() {
+            const grid = document.getElementById('esportesTimesGrid');
+            if (!grid) return;
+
+            // Ordenar: Favoritos primeiro
+            const timesOrdenados = [...timesBrasileiros].sort((a, b) => {
+                const aFav = timesFavoritos.includes(a.id);
+                const bFav = timesFavoritos.includes(b.id);
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                return 0;
+            });
+
+            grid.innerHTML = timesOrdenados.map(time => {
+                const isFav = timesFavoritos.includes(time.id);
+                return `
+                    <div class="esporte-time-card" onclick="abrirTimeModal('${time.id}')">
+                        <i class="${isFav ? 'fas' : 'far'} fa-star esporte-fav-star ${isFav ? 'favorito' : ''}" onclick="toggleFavorito('${time.id}', event)"></i>
+                        <img src="${time.escudo}" alt="${time.nome}" loading="lazy">
+                        <div class="esporte-time-nome">${time.nome}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function abrirTimeModal(id) {
+            const time = timesBrasileiros.find(t => t.id === id);
+            if (!time) return;
+
+            timeModalAtual = time;
+            document.getElementById('timeModalNome').textContent = time.nome;
+            document.getElementById('timeModalEscudo').src = time.escudo;
+            document.getElementById('timeModalExtra').textContent = time.tipo;
+            
+            atualizarBtnFavoritoModal();
+            document.getElementById('timeModal').classList.add('active');
+            document.body.classList.add('modal-open');
+            
+            mudarTimeTab('ultimos');
+        }
+
+        function fecharTimeModal() {
+            document.getElementById('timeModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+            timeModalAtual = null;
+        }
+
+        function mudarTimeTab(tab) {
+            tabAtual = tab;
+            document.getElementById('tabUltimos').classList.toggle('active', tab === 'ultimos');
+            document.getElementById('tabProximos').classList.toggle('active', tab === 'proximos');
+            carregarJogosTime();
+        }
+
+        async function carregarJogosTime() {
+            const container = document.getElementById('timeJogosContainer');
+            if (!timeModalAtual) return;
+
+            container.innerHTML = '<div class="jogos-loading"><i class="fas fa-spinner fa-spin"></i> Carregando jogos...</div>';
+
+            try {
+                // Endpoint TheSportsDB: Past Events (eventslast.php) ou Next Events (eventsnext.php)
+                // Usando chave 3 (free/test)
+                const endpoint = tabAtual === 'ultimos' 
+                    ? \`https://www.thesportsdb.com/api/v1/json/3/eventslast.php?id=\${timeModalAtual.id}\`
+                    : \`https://www.thesportsdb.com/api/v1/json/3/eventsnext.php?id=\${timeModalAtual.id}\`;
+
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                const events = data.results || data.events || [];
+
+                if (events.length === 0) {
+                    container.innerHTML = '<div class="notif-empty">Nenhum jogo encontrado.</div>';
+                    return;
+                }
+
+                container.innerHTML = events.map(jogo => {
+                    const dataJogo = new Date(jogo.strTimestamp || jogo.dateEvent);
+                    const formatada = isNaN(dataJogo.getTime()) ? jogo.dateEvent : dataJogo.toLocaleDateString('pt-BR') + ' ' + (jogo.strTime ? jogo.strTime.substring(0, 5) : '');
+                    
+                    const placar = tabAtual === 'ultimos' 
+                        ? \`\${jogo.intHomeScore || 0} - \${jogo.intAwayScore || 0}\`
+                        : 'vs';
+
+                    return \`
+                        <div class="jogo-card">
+                            <div class="jogo-time-nome" style="text-align: right;">\${jogo.strHomeTeam}</div>
+                            <div class="jogo-placar">\${placar}</div>
+                            <div class="jogo-time-nome">\${jogo.strAwayTeam}</div>
+                            <div class="jogo-data">\${formatada}<br>\${jogo.strLeague || ''}</div>
+                        </div>
+                    \`;
+                }).join('');
+
+            } catch (err) {
+                console.warn('Erro ao carregar jogos:', err);
+                container.innerHTML = '<div class="notif-empty" style="color: #ff6b6b;">Erro ao carregar dados dos jogos.</div>';
+            }
+        }
+
+        // Simula checagem de resultados para times favoritos (apenas visualmente para notificar)
+        function checarResultadosFavoritos() {
+            if (timesFavoritos.length > 0 && Math.random() > 0.7) {
+                const id = timesFavoritos[Math.floor(Math.random() * timesFavoritos.length)];
+                const time = timesBrasileiros.find(t => t.id === id);
+                if (time) {
+                    adicionarNotificacao(\`Resultado atualizado para \${time.nome}. Confira os últimos jogos.\`, 'sport');
+                }
+            }
+        }
+
+        // Intercepta a adição de notícias (simulado ou real) para adicionar notificação
+        const originalExibir = typeof exibir === 'function' ? exibir : null;
+        if (originalExibir) {
+            exibir = function(noticias) {
+                originalExibir(noticias);
+                if (noticias && noticias.length > 0) {
+                    // Simular notificação da notícia mais recente se ela for nova (baseado na data)
+                    const maisRecente = noticias[0];
+                    const chaveVisto = 'c7-last-news-seen';
+                    const ultimoVisto = getStorage().getItem(chaveVisto);
+                    
+                    if (maisRecente._id !== ultimoVisto) {
+                        adicionarNotificacao(\`Nova notícia: \${maisRecente.titulo}\`, 'news', new Date(maisRecente.dataPublicacao || Date.now()));
+                        getStorage().setItem(chaveVisto, maisRecente._id);
+                    }
+                }
+            };
+        }
+
         // Carrega as notícias assim que o HTML fica pronto
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Página pronta, iniciando carregamento rápido de notícias...');
+            atualizarBadgeNotificacoes();
+            renderEsportes();
             travarBounceSafari();
             atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
             carregarTodas();
             carregarAnuncios();
             carregarSecundarios();
+            
+            setInterval(checarResultadosFavoritos, 60 * 1000 * 10); // A cada 10 min
         });
     </script>
 </body>
