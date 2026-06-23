@@ -1497,7 +1497,8 @@
     </footer>
 
     <script>
-        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
         const anunciosIntervalos = {};
         const CACHE_TTL_MS = 5 * 60 * 1000;
         const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
