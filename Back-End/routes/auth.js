@@ -12,7 +12,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
     }
 
-    const user = await User.findOne({ usuario: { $regex: `^${usuario}$`, $options: 'i' } });
+    const user = await User.findOne({
+      $or: [
+        { usuario: { $regex: `^${usuario}$`, $options: 'i' } },
+        { email: { $regex: `^${usuario}$`, $options: 'i' } }
+      ]
+    });
 
     if (!user) {
       return res.status(401).json({ erro: 'Usuário ou senha inválidos' });

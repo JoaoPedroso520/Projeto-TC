@@ -33,7 +33,7 @@ const anuncioSchema = new mongoose.Schema(
     },
     posicao: {
       type: String,
-      enum: ['topo', 'meio', 'lateral', 'rodape'],
+      enum: ['topo', 'meio', 'rodape'],
       default: 'topo',
     },
     tempoRotacaoSeg: {

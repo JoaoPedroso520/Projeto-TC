@@ -805,8 +805,8 @@
             <h1><i class="fas fa-lock"></i> Acesso Admin</h1>
             <form class="login-form" onsubmit="fazerLogin(event)">
                 <div class="form-group">
-                    <label><i class="fas fa-user"></i> Usuário</label>
-                    <input type="text" id="loginUser" required placeholder="Seu usuário">
+                    <label><i class="fas fa-user"></i> Usuário ou E-mail</label>
+                    <input type="text" id="loginUser" required placeholder="Seu usuário ou e-mail">
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-key"></i> Senha</label>
@@ -841,6 +841,8 @@
                 Anúncios/Banners</button>
             <button class="menu-btn" onclick="mudarAba('categorias')"><i class="fas fa-tags"></i>
                 Categorias</button>
+            <button class="menu-btn" onclick="mudarAba('usuarios')"><i class="fas fa-users"></i>
+                Usuários</button>
         </div>
 
         <!-- NOTÍCIAS -->
@@ -1045,6 +1047,52 @@
             </div>
         </div>
 
+        <!-- USUÁRIOS -->
+        <div id="usuarios" class="section">
+            <h2><i class="fas fa-users"></i> Gerenciar Administradores</h2>
+            <button class="btn-add" onclick="abrirFormUsuario()"><i class="fas fa-plus"></i> Novo Admin</button>
+
+            <div id="formUsuario" class="form-card">
+                <h3><i class="fas fa-user-edit"></i> Criar/Editar Admin</h3>
+                <form id="formulario-usuario" onsubmit="salvarUsuario(event)">
+                    <input type="hidden" id="usuario-id">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Nome de Usuário *</label>
+                        <input type="text" id="usuario-nome-input" required placeholder="Ex: admin123">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope"></i> E-mail *</label>
+                        <input type="email" id="usuario-email" required placeholder="Ex: admin@c7noticias.com">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-key"></i> Senha <small>(Deixe em branco para não alterar)</small></label>
+                        <input type="password" id="usuario-senha" placeholder="Digite uma nova senha forte">
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="usuario-ativo" checked style="width: auto; margin-right: 8px;"> Ativo</label>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Salvar</button>
+                        <button type="button" onclick="fecharFormUsuario()" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>E-mail</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuariosTabela"></tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <!-- MODAL CONFIRMAÇÃO -->
@@ -1156,6 +1204,7 @@
                     carregarCategorias();
                     carregarNoticias();
                     carregarAnuncios();
+                    carregarUsuarios();
                 } else {
                     const mensagemErro = data.erro || (data.mensagem && !res.ok ? data.mensagem : 'Usuário ou senha inválidos');
                     loginError.textContent = mensagemErro;
@@ -1206,6 +1255,7 @@
                     carregarCategorias();
                     carregarNoticias();
                     carregarAnuncios();
+                    carregarUsuarios();
                 } else if (res.status === 401) {
                     localStorage.removeItem('adminToken');
                 }
@@ -1229,6 +1279,7 @@
                 carregarCategorias();
                 carregarNoticias();
                 carregarAnuncios();
+                carregarUsuarios();
             }
         });
 
@@ -1260,7 +1311,7 @@
         // ==== CATEGORIAS ====
         async function carregarCategorias() {
             try {
-                const res = await fetch(`${API_URL}/categorias`);
+                const res = await fetch(`${API_URL}/categorias`, { cache: 'no-store' });
                 const categorias = await res.json();
                 const lista = (categorias || []).map(c => c.nome || c);
 
@@ -1296,7 +1347,7 @@
         // ==== NOTÍCIAS ====
         async function carregarNoticias() {
             try {
-                const res = await fetch(`${API_URL}/noticias`);
+                const res = await fetch(`${API_URL}/noticias`, { cache: 'no-store' });
                 const noticias = await res.json();
                 const tbody = document.getElementById('noticiasTabela');
 
@@ -1347,7 +1398,7 @@
 
         async function editarNoticia(id) {
             try {
-                const res = await fetch(`${API_URL}/noticias/${id}`);
+                const res = await fetch(`${API_URL}/noticias/${id}?raw=1`, { cache: 'no-store' });
                 const n = await res.json();
 
                 document.getElementById('noticiaId').value = n._id;
@@ -1449,7 +1500,7 @@
         // ==== ANÚNCIOS ====
         async function carregarAnuncios() {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`);
+                const res = await fetch(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 const tbody = document.getElementById('anunciosTabela');
 
@@ -1458,7 +1509,7 @@
                     return;
                 }
 
-                const posicoes = { topo: 'Topo', meio: 'Meio', lateral: 'Lateral', rodape: 'Rodapé' };
+                const posicoes = { topo: 'Topo', meio: 'Meio', rodape: 'Rodapé' };
                 tbody.innerHTML = anuncios.map(a => {
                     const inicio = new Date(a.dataInicio).toLocaleDateString('pt-BR');
                     const fim = new Date(a.dataFim).toLocaleDateString('pt-BR');
@@ -1505,7 +1556,7 @@
 
         async function editarAnuncio(id) {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`);
+                const res = await fetch(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 const a = anuncios.find(x => x._id === id);
 
@@ -1710,6 +1761,115 @@
             } catch (e) {
                 showNotification('Erro: ' + e.message, 'error');
             }
+        }
+
+        // ==== USUÁRIOS ====
+        async function carregarUsuarios() {
+            try {
+                const res = await fetch(`${API_URL}/usuarios`, { cache: 'no-store' });
+                const usuarios = await res.json();
+                const tbody = document.getElementById('usuariosTabela');
+
+                if (!usuarios || usuarios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px;"><i class="fas fa-users"></i> Nenhum usuário</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = usuarios.map(u => `
+                    <tr>
+                        <td><strong>${u.usuario}</strong></td>
+                        <td>${u.email}</td>
+                        <td><span class="status ${u.ativo ? 'ativo' : 'inativo'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-edit" onclick="editarUsuario('${u._id}', '${u.usuario}', '${u.email}', ${u.ativo})"><i class="fas fa-edit"></i> Editar</button>
+                                <button class="btn-small btn-delete" onclick="deletarUsuario('${u._id}', '${u.usuario}')"><i class="fas fa-trash"></i> Deletar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                showNotification('Erro ao carregar usuários', 'error');
+            }
+        }
+
+        function abrirFormUsuario() {
+            document.getElementById('usuario-id').value = '';
+            document.getElementById('usuario-nome-input').value = '';
+            document.getElementById('usuario-email').value = '';
+            document.getElementById('usuario-senha').value = '';
+            document.getElementById('usuario-senha').required = true;
+            document.getElementById('usuario-ativo').checked = true;
+            document.getElementById('formUsuario').classList.add('visible');
+        }
+
+        function fecharFormUsuario() {
+            document.getElementById('formUsuario').classList.remove('visible');
+        }
+
+        function editarUsuario(id, usuario, email, ativo) {
+            document.getElementById('usuario-id').value = id;
+            document.getElementById('usuario-nome-input').value = usuario;
+            document.getElementById('usuario-email').value = email;
+            document.getElementById('usuario-senha').value = '';
+            document.getElementById('usuario-senha').required = false;
+            document.getElementById('usuario-ativo').checked = ativo;
+            document.getElementById('formUsuario').classList.add('visible');
+            document.getElementById('formUsuario').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function salvarUsuario(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+
+            const id = document.getElementById('usuario-id').value;
+            const dados = {
+                usuario: document.getElementById('usuario-nome-input').value,
+                email: document.getElementById('usuario-email').value,
+                senha: document.getElementById('usuario-senha').value,
+                ativo: document.getElementById('usuario-ativo').checked
+            };
+
+            try {
+                const res = await fetch(id ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok) {
+                    showNotification(data.mensagem || (id ? 'Usuário atualizado!' : 'Usuário adicionado!'), 'success');
+                    fecharFormUsuario();
+                    carregarUsuarios();
+                } else {
+                    showNotification(data.erro || 'Erro ao salvar usuário', 'error');
+                }
+            } catch (e) {
+                showNotification('Erro: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function deletarUsuario(id, usuario) {
+            showConfirmation(`Deletar administrador "${usuario}"?`, async () => {
+                try {
+                    const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+                    const data = await res.json().catch(() => ({}));
+                    
+                    if (res.ok) {
+                        showNotification(data.mensagem || 'Usuário deletado!', 'success');
+                        carregarUsuarios();
+                    } else {
+                        showNotification(data.erro || 'Erro ao deletar usuário', 'error');
+                    }
+                } catch (e) {
+                    showNotification('Erro de conexão', 'error');
+                }
+            });
         }
 
     </script>
