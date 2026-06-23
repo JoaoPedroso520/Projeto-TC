@@ -12,10 +12,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ erro: 'Usuário e senha são obrigatórios' });
     }
 
+    const usuarioLimpo = usuario.trim();
+
     const user = await User.findOne({
       $or: [
-        { usuario: { $regex: `^${usuario}$`, $options: 'i' } },
-        { email: { $regex: `^${usuario}$`, $options: 'i' } }
+        { usuario: { $regex: `^${usuarioLimpo}$`, $options: 'i' } },
+        { email: { $regex: `^${usuarioLimpo}$`, $options: 'i' } }
       ]
     });
 

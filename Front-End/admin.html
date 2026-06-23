@@ -1108,8 +1108,8 @@
     </div>
 
     <script>
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
+        // API Local forçada para garantir o teste
+        const API_URL = 'http://localhost:5000/api';
         let confirmCallback = null;
         let usuarioAutenticado = null;
 
