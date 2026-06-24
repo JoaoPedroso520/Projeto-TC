@@ -2526,71 +2526,83 @@
             }, tempoMs);
         }
 
-        async function carregarTodas() {
-            console.log('Carregando todas as notícias...');
+        async function carregarTodas(isSilencioso = false) {
+            if (!isSilencioso) console.log('Carregando todas as notícias...');
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}todas`;
             const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
             let exibiuCache = false;
-            if (noticiasCache) {
+            if (noticiasCache && !isSilencioso) {
                 setFiltroAtivo('');
                 exibir(noticiasCache);
                 exibiuCache = true;
             }
 
             try {
-                setFiltroAtivo('');
+                if (!isSilencioso) setFiltroAtivo('');
                 // Evitar cache do navegador para mostrar notícias recém-criadas na hora
                 const res = await fetch(`${API_URL}/noticias?t=${Date.now()}`, { cache: 'no-store' });
-                console.log('Response status:', res.status);
+                if (!isSilencioso) console.log('Response status:', res.status);
 
                 if (!res.ok) {
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
 
                 const noticias = await res.json();
+                
+                // Só atualiza a tela se tiver mudado para não piscar a interface
+                if (isSilencioso && JSON.stringify(noticiasCache) === JSON.stringify(noticias)) {
+                    return;
+                }
+                
                 setCache(cacheKey, noticias);
-                console.log('Notícias recebidas:', noticias.length);
+                if (!isSilencioso) console.log('Notícias recebidas:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.warn('Erro ao carregar:', e);
-                if (!exibiuCache) {
+                if (!isSilencioso) console.warn('Erro ao carregar:', e);
+                if (!exibiuCache && !isSilencioso) {
                     document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
                 }
             }
         }
 
-        async function carregarPorCategoria(cat) {
-            console.log('Carregando categoria:', cat);
+        async function carregarPorCategoria(cat, isSilencioso = false) {
+            if (!isSilencioso) console.log('Carregando categoria:', cat);
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}categoria:${cat}`;
             const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
             let exibiuCache = false;
-            if (noticiasCache) {
+            if (noticiasCache && !isSilencioso) {
                 setFiltroAtivo(cat);
                 exibir(noticiasCache);
                 exibiuCache = true;
             }
 
             try {
-                setFiltroAtivo(cat);
+                if (!isSilencioso) setFiltroAtivo(cat);
                 // Evitar cache do navegador
                 const url = `${API_URL}/noticias/categoria/${encodeURIComponent(cat)}?t=${Date.now()}`;
-                console.log('URL:', url);
+                if (!isSilencioso) console.log('URL:', url);
                 const res = await fetch(url, { cache: 'no-store' });
-                console.log('Response status:', res.status);
+                if (!isSilencioso) console.log('Response status:', res.status);
 
                 if (!res.ok) {
                     const erro = await res.text();
-                    console.warn('Erro do servidor:', erro);
+                    if (!isSilencioso) console.warn('Erro do servidor:', erro);
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
                 const noticias = await res.json();
+                
+                // Só atualiza a tela se tiver mudado
+                if (isSilencioso && JSON.stringify(noticiasCache) === JSON.stringify(noticias)) {
+                    return;
+                }
+                
                 setCache(cacheKey, noticias);
-                console.log('Notícias da categoria:', noticias.length);
+                if (!isSilencioso) console.log('Notícias da categoria:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.warn('Erro ao carregar categoria:', e);
-                if (!exibiuCache) {
+                if (!isSilencioso) console.warn('Erro ao carregar categoria:', e);
+                if (!exibiuCache && !isSilencioso) {
                     document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
                 }
@@ -2898,7 +2910,10 @@
             }
         }
 
+        window.categoriaAtualLoop = '';
+
         function setFiltroAtivo(categoria) {
+            window.categoriaAtualLoop = categoria || '';
             const alvo = normalizarTexto(categoria || '');
 
             const botoes = document.querySelectorAll('#filtrosNoticias .filtro-btn');
@@ -4132,6 +4147,18 @@
             carregarSecundarios();
             
             setInterval(checarResultadosFavoritos, 60 * 1000 * 10); // A cada 10 min
+            
+            // Loop de atualização silenciosa para mostrar novas notícias instantaneamente
+            setInterval(() => {
+                const searchInput = document.getElementById('search-input');
+                if (!searchInput || searchInput.value.trim() === '') {
+                    if (window.categoriaAtualLoop) {
+                        carregarPorCategoria(window.categoriaAtualLoop, true);
+                    } else {
+                        carregarTodas(true);
+                    }
+                }
+            }, 2000); // 2 segundos
         });
     </script>
 </body>
