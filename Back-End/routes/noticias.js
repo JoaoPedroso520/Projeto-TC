@@ -8,6 +8,7 @@ router.get('/:id', noticiaController.obterPorId);
 router.get('/', noticiaController.obterTodas);
 
 // Rotas Admin (protegidas - adicionar middleware de autenticação após)
+router.get('/admin/todas', noticiaController.obterParaAdmin);
 router.post('/', noticiaController.criar);
 router.put('/:id', noticiaController.atualizar);
 router.delete('/:id', noticiaController.deletar);

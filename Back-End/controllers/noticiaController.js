@@ -5,7 +5,7 @@ function escapeRegex(text) {
   return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Obter todas as notícias
+// Obter todas as notícias (Público)
 exports.obterTodas = async (req, res) => {
   try {
     const noticias = await Noticia.find({ ativo: true })
@@ -15,6 +15,20 @@ exports.obterTodas = async (req, res) => {
       .lean();
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json(noticias.map(noticia => withOptimizedImage(req, noticia, 'noticias', 720, 58)));
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
+  }
+};
+
+// Obter todas as notícias (Admin - sem cache e sem filtro de ativo)
+exports.obterParaAdmin = async (req, res) => {
+  try {
+    const noticias = await Noticia.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+    // Admin precisa de dados sempre frescos
+    res.set('Cache-Control', 'no-store');
+    res.json(noticias);
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
@@ -56,13 +70,14 @@ exports.obterPorId = async (req, res) => {
 // Criar notícia (Admin)
 exports.criar = async (req, res) => {
   try {
-    const { titulo, conteudo, categoria, foto, autor } = req.body;
+    const { titulo, conteudo, categoria, foto, autor, ativo } = req.body;
     const noticia = new Noticia({
       titulo,
       conteudo,
       categoria,
       foto,
       autor: autor || 'Administrador',
+      ativo: ativo !== undefined ? ativo : true
     });
     await noticia.save();
     res.status(201).json(noticia);

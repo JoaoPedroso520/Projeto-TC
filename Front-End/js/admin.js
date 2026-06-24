@@ -73,7 +73,7 @@ function mudarAba(tabName) {
 // Carregar notícias
 async function carregarNoticias() {
     try {
-        const response = await fetch(`${API_URL}/noticias`);
+        const response = await fetch(`${API_URL}/noticias/admin/todas?t=${Date.now()}`);
         const noticias = await response.json();
         exibirNoticias(noticias);
     } catch (error) {
@@ -204,7 +204,7 @@ async function salvarNoticia(e) {
 // Carregar anúncios
 async function carregarAnuncios() {
     try {
-        const response = await fetch(`${API_URL}/anuncios/admin/todos`);
+        const response = await fetch(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`);
         const anuncios = await response.json();
         exibirAnuncios(anuncios);
     } catch (error) {
