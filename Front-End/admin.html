@@ -1118,8 +1118,8 @@
     </div>
 
     <script>
-        // API Local forçada para garantir o teste
-        const API_URL = 'http://localhost:5000/api';
+        // API Local forçada removida - sempre aponta para produção para evitar confusão de banco
+        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
         let confirmCallback = null;
         let usuarioAutenticado = null;
 
@@ -1358,7 +1358,8 @@
         // ==== NOTÍCIAS ====
         async function carregarNoticias() {
             try {
-                const res = await fetch(`${API_URL}/noticias`, { cache: 'no-store' });
+                // Puxar do novo endpoint admin que traz todas sem restrição
+                const res = await fetch(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
                 const noticias = await res.json();
                 const tbody = document.getElementById('noticiasTabela');
 
