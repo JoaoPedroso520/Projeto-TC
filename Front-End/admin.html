@@ -1277,6 +1277,15 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
+            
+            // Auto-Refresh
+            setInterval(() => {
+                if (usuarioAutenticado) {
+                    carregarCategorias();
+                    carregarNoticias();
+                    carregarAnuncios();
+                }
+            }, 30000);
         });
 
         // ==== VERIFICAR LOGIN ====
@@ -1319,11 +1328,21 @@
             event.target.closest('.menu-btn').classList.add('active');
         }
 
+        // Caches para auto-refresh
+        let cacheCategoriasAdmin = '';
+        let cacheNoticiasAdmin = '';
+        let cacheAnunciosAdmin = '';
+
         // ==== CATEGORIAS ====
         async function carregarCategorias() {
             try {
                 const res = await fetch(`${API_URL}/categorias`, { cache: 'no-store' });
                 const categorias = await res.json();
+                
+                const catStr = JSON.stringify(categorias);
+                if (catStr === cacheCategoriasAdmin) return;
+                cacheCategoriasAdmin = catStr;
+
                 const lista = (categorias || []).map(c => c.nome || c);
 
                 const select = document.getElementById('noticiaCategoria');
@@ -1361,6 +1380,11 @@
                 // Puxar do novo endpoint admin que traz todas sem restrição
                 const res = await fetch(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
                 const noticias = await res.json();
+                
+                const notStr = JSON.stringify(noticias);
+                if (notStr === cacheNoticiasAdmin) return;
+                cacheNoticiasAdmin = notStr;
+
                 const tbody = document.getElementById('noticiasTabela');
 
                 if (!noticias || noticias.length === 0) {
@@ -1512,8 +1536,13 @@
         // ==== ANÚNCIOS ====
         async function carregarAnuncios() {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
+                const res = await fetch(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`, { cache: 'no-store' });
                 const anuncios = await res.json();
+                
+                const anStr = JSON.stringify(anuncios);
+                if (anStr === cacheAnunciosAdmin) return;
+                cacheAnunciosAdmin = anStr;
+
                 const tbody = document.getElementById('anunciosTabela');
 
                 if (!anuncios || anuncios.length === 0) {

@@ -1132,7 +1132,7 @@
         @media (max-width: 768px) {
             .header-content {
                 display: grid;
-                grid-template-columns: 1fr auto;
+                grid-template-columns: 1fr auto auto;
                 align-items: center;
                 gap: 12px;
             }
@@ -1154,6 +1154,15 @@
 
             .menu-principal.menu-aberto {
                 display: flex;
+                position: absolute;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                z-index: 1000;
+            }
+
+            .header-right {
+                grid-column: 2 / -1;
             }
 
             .menu-close-btn {
@@ -1344,8 +1353,9 @@
                 padding: 0;
             }
             .live-score {
-                font-size: 20px;
-                padding: 4px 8px;
+                font-size: 16px;
+                padding: 4px 6px;
+                white-space: nowrap;
             }
             .live-team img {
                 width: 34px;
@@ -2030,25 +2040,24 @@
                     <img src="img/Logo.png" alt="Logo C7 Notícias" width="160" height="32" fetchpriority="high" decoding="async">
                 </a>
             </div>
-            <button class="menu-mobile-toggle" type="button" aria-label="Abrir menu" onclick="toggleMenuMobile()">
-                <i class="fas fa-bars"></i>
-            </button>
-            <nav class="menu-principal" id="menuPrincipal">
-                <button class="menu-close-btn" type="button" aria-label="Fechar menu" onclick="fecharMenuMobile()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button class="menu-link" onclick="carregarTodas(); fecharMenuMobile()"><i class="fas fa-home"></i> Home</button>
-                <div class="menu-categorias" id="menu-categorias"></div>
-                <div class="busca-container">
-                    <input type="text" id="buscaInput" placeholder="Buscar notícias..." aria-label="Buscar notícias"
-                        oninput="atualizarBotaoLimparBusca()"
-                        onkeypress="if(event.key==='Enter') fazerBusca()">
-                    <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
-                        onclick="limparBusca()">
+            <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
+                <nav class="menu-principal" id="menuPrincipal">
+                    <button class="menu-close-btn" type="button" aria-label="Fechar menu" onclick="fecharMenuMobile()">
                         <i class="fas fa-times"></i>
                     </button>
-                    <button onclick="fazerBusca()"><i class="fas fa-search"></i> Buscar</button>
-                </div>
+                    <button class="menu-link" onclick="carregarTodas(); fecharMenuMobile()"><i class="fas fa-home"></i> Home</button>
+                    <div class="menu-categorias" id="menu-categorias"></div>
+                    <div class="busca-container">
+                        <input type="text" id="buscaInput" placeholder="Buscar notícias..." aria-label="Buscar notícias"
+                            oninput="atualizarBotaoLimparBusca()"
+                            onkeypress="if(event.key==='Enter') fazerBusca()">
+                        <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
+                            onclick="limparBusca()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button onclick="fazerBusca()"><i class="fas fa-search"></i> Buscar</button>
+                    </div>
+                </nav>
                 <div class="notif-wrapper">
                     <button class="notif-bell-btn" id="notifBellBtn" type="button" aria-label="Notificações" onclick="toggleNotifPanel()">
                         <i class="fas fa-bell"></i>
@@ -2064,7 +2073,10 @@
                         </div>
                     </div>
                 </div>
-            </nav>
+                <button class="menu-mobile-toggle" type="button" aria-label="Abrir menu" onclick="toggleMenuMobile()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -3541,6 +3553,7 @@
             if (timeModalAtual && timeModalAtual.id === id) {
                 atualizarBtnFavoritoModal();
             }
+            carregarPlacaresAoVivo();
         }
 
         function toggleFavoritoModal() {
