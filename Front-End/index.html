@@ -2060,10 +2060,40 @@
                 padding: 20px 10px;
             }
         }
+        .live-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .live-toast {
+            background: #111;
+            color: #fff;
+            padding: 16px 20px;
+            border-left: 5px solid #00cc00;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastSlideIn 0.3s ease forwards, toastFadeOut 0.4s ease 5s forwards;
+            pointer-events: auto;
+        }
+
+        @keyframes toastSlideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
     </style>
 </head>
 
 <body id="top">
+    <div id="liveToastContainer" class="live-toast-container"></div>
     <h1 class="sr-only">C7 Notícias</h1>
     <header>
         <div class="header-content">
@@ -3699,6 +3729,19 @@
         let jogosAoVivoFavoritos = [];
         let indexJogoAoVivo = 0;
         let historicoGolsAoVivo = {}; // Salva os gols pra detectar se teve gol novo
+        let historicoStatusAoVivo = {}; // Detecta transição de em andamento para finalizado
+
+        function mostrarToastAoVivo(msg) {
+            const container = document.getElementById('liveToastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'live-toast';
+            toast.innerHTML = `<i class="fas fa-futbol" style="color: #00cc00; font-size: 20px;"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (container.contains(toast)) container.removeChild(toast);
+            }, 5500);
+        }
 
         async function carregarPlacaresAoVivo() {
             if (timesFavoritos.length === 0) {
@@ -3744,8 +3787,7 @@
                     const status = e.competitions[0].status.type.state;
                     const dateStr = new Date(e.date).toISOString().split('T')[0];
                     
-                    // Só jogos acontecendo AGORA ou agendados para HOJE
-                    if (status !== 'in' && (status !== 'pre' || dateStr !== hojeStr)) return false;
+                    if (status !== 'in' && dateStr !== hojeStr) return false;
                     
                     const comp = e.competitions[0];
                     const hasFavorito = comp.competitors.some(c => timesFavoritos.includes(c.team.id));
@@ -3755,30 +3797,35 @@
                 // Detectar se houve gol novo para mandar notificação em tempo real
                 novosJogosAoVivo.forEach(jogo => {
                     const status = jogo.competitions[0].status.type.state;
+                    const comp = jogo.competitions[0];
+                    const home = comp.competitors.find(c => c.homeAway === 'home');
+                    const away = comp.competitors.find(c => c.homeAway === 'away');
+                    const jogoKey = jogo.id;
+                    const golsHome = parseInt(home.score) || 0;
+                    const golsAway = parseInt(away.score) || 0;
+                    const totalGols = golsHome + golsAway;
+                    
                     if (status === 'in') {
-                        const comp = jogo.competitions[0];
-                        const home = comp.competitors.find(c => c.homeAway === 'home');
-                        const away = comp.competitors.find(c => c.homeAway === 'away');
-                        
-                        const golsHome = parseInt(home.score) || 0;
-                        const golsAway = parseInt(away.score) || 0;
-                        const totalGols = golsHome + golsAway;
-                        
-                        const jogoKey = jogo.id;
-                        
                         if (historicoGolsAoVivo[jogoKey] !== undefined) {
                             if (totalGols > historicoGolsAoVivo[jogoKey]) {
-                                // Houve um gol!
                                 let msgGol = `GOOOOOL! ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                                mostrarToastAoVivo(msgGol);
                                 adicionarNotificacao(msgGol, 'sport');
                             }
                         }
-                        
                         historicoGolsAoVivo[jogoKey] = totalGols;
                     }
+
+                    const oldStatus = historicoStatusAoVivo[jogoKey];
+                    if (oldStatus === 'in' && (status === 'post' || comp.status.type.completed)) {
+                        let msgFim = `FIM DE JOGO: ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                        mostrarToastAoVivo(msgFim);
+                        adicionarNotificacao(msgFim, 'sport');
+                    }
+                    historicoStatusAoVivo[jogoKey] = status;
                 });
 
-                jogosAoVivoFavoritos = novosJogosAoVivo;
+                jogosAoVivoFavoritos = novosJogosAoVivo.filter(j => j.competitions[0].status.type.state === 'in');
 
                 // Renderizar
                 renderLiveScoreboard();
