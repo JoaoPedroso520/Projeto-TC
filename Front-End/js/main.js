@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarAnuncios();
     setupEventListeners();
     
-    // Auto-Refresh a cada 30 segundos
+    // Auto-Refresh a cada 5 segundos
     setInterval(() => {
         if (categoriaAtual) {
             carregarNoticiasPorCategoria(categoriaAtual, true);
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carregarNoticias(true);
         }
         carregarAnuncios(true);
-    }, 30000);
+    }, 5000);
 });
 
 // Setup de Event Listeners
