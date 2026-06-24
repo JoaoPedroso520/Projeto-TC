@@ -3630,11 +3630,25 @@
             }
 
             try {
-                // Busca de ambas as ligas
-                const endpoints = [
-                    'https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard',
-                    'https://site.api.espn.com/apis/site/v2/sports/soccer/bra.2/scoreboard'
-                ];
+                // Mapear ligas dos favoritos
+                const ligasParaBuscar = new Set();
+                const ligaMap = {
+                    'Serie A': 'bra.1', 'Serie B': 'bra.2', 'Libertadores': 'conmebol.libertadores',
+                    'Premier League': 'eng.1', 'La Liga': 'esp.1', 'Serie A Italy': 'ita.1',
+                    'Bundesliga': 'ger.1', 'Ligue 1': 'fra.1', 'Champions': 'uefa.champions',
+                    'World Cup': 'fifa.world', 'Seleção': 'fifa.world'
+                };
+
+                timesFavoritos.forEach(id => {
+                    const t = timesBrasileiros.find(x => x.id === id);
+                    if (t) {
+                        const liga = ligaMap[t.tipo] || 'bra.1';
+                        ligasParaBuscar.add(liga);
+                    }
+                });
+
+                const endpoints = Array.from(ligasParaBuscar).map(liga => `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard`);
+                if (endpoints.length === 0) endpoints.push('https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard');
                 
                 let todosEventos = [];
                 for(let ep of endpoints) {
@@ -3645,10 +3659,16 @@
                     } catch(e) {}
                 }
 
-                // Filtrar os que estão ao vivo e que têm um dos favoritos
+                const agora = new Date();
+                const hojeStr = agora.toISOString().split('T')[0];
+
+                // Filtrar os que estão ao vivo ou que são HOJE e têm um dos favoritos
                 const novosJogosAoVivo = todosEventos.filter(e => {
                     const status = e.competitions[0].status.type.state;
-                    if (status !== 'in') return false; // Só jogos acontecendo AGORA
+                    const dateStr = new Date(e.date).toISOString().split('T')[0];
+                    
+                    // Só jogos acontecendo AGORA ou agendados para HOJE
+                    if (status !== 'in' && (status !== 'pre' || dateStr !== hojeStr)) return false;
                     
                     const comp = e.competitions[0];
                     const hasFavorito = comp.competitors.some(c => timesFavoritos.includes(c.team.id));
@@ -3657,26 +3677,28 @@
 
                 // Detectar se houve gol novo para mandar notificação em tempo real
                 novosJogosAoVivo.forEach(jogo => {
-                    const comp = jogo.competitions[0];
-                    const home = comp.competitors.find(c => c.homeAway === 'home');
-                    const away = comp.competitors.find(c => c.homeAway === 'away');
-                    
-                    const golsHome = parseInt(home.score) || 0;
-                    const golsAway = parseInt(away.score) || 0;
-                    const totalGols = golsHome + golsAway;
-                    
-                    const jogoKey = jogo.id;
-                    
-                    if (historicoGolsAoVivo[jogoKey] !== undefined) {
-                        if (totalGols > historicoGolsAoVivo[jogoKey]) {
-                            // Houve um gol!
-                            let msgGol = `GOOOOOL! ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
-                            adicionarNotificacao(msgGol, 'sport');
-                            // Toca um sonzinho se quiser
+                    const status = jogo.competitions[0].status.type.state;
+                    if (status === 'in') {
+                        const comp = jogo.competitions[0];
+                        const home = comp.competitors.find(c => c.homeAway === 'home');
+                        const away = comp.competitors.find(c => c.homeAway === 'away');
+                        
+                        const golsHome = parseInt(home.score) || 0;
+                        const golsAway = parseInt(away.score) || 0;
+                        const totalGols = golsHome + golsAway;
+                        
+                        const jogoKey = jogo.id;
+                        
+                        if (historicoGolsAoVivo[jogoKey] !== undefined) {
+                            if (totalGols > historicoGolsAoVivo[jogoKey]) {
+                                // Houve um gol!
+                                let msgGol = `GOOOOOL! ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                                adicionarNotificacao(msgGol, 'sport');
+                            }
                         }
+                        
+                        historicoGolsAoVivo[jogoKey] = totalGols;
                     }
-                    
-                    historicoGolsAoVivo[jogoKey] = totalGols;
                 });
 
                 jogosAoVivoFavoritos = novosJogosAoVivo;
@@ -3709,8 +3731,23 @@
             const comp = jogo.competitions[0];
             const home = comp.competitors.find(c => c.homeAway === 'home');
             const away = comp.competitors.find(c => c.homeAway === 'away');
+            const state = comp.status.type.state;
 
-            const tempo = comp.status.displayClock + "' " + (comp.status.period === 1 ? '1ºT' : (comp.status.period === 2 ? '2ºT' : 'Int'));
+            let centerTopHtml = '';
+            let centerMiddleHtml = '';
+            let centerBottomHtml = '';
+            
+            if (state === 'in') {
+                const tempo = comp.status.displayClock + "' " + (comp.status.period === 1 ? '1ºT' : (comp.status.period === 2 ? '2ºT' : 'Int'));
+                centerMiddleHtml = `<div class="live-score">${home.score} - ${away.score}</div>`;
+                centerBottomHtml = `<div class="live-time"><i class="fas fa-circle fa-beat" style="font-size:8px;margin-right:4px;"></i>${tempo}</div>`;
+            } else if (state === 'pre') {
+                const dataJogo = new Date(jogo.date);
+                const horario = dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #ffeb3b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Hoje</div>`;
+                centerMiddleHtml = `<div class="live-score" style="color: #aaa; font-size: 1.2rem;">X</div>`;
+                centerBottomHtml = `<div class="live-time" style="color: #ccc; margin-top: 4px;"><i class="far fa-clock" style="font-size:10px;margin-right:4px;"></i>${horario}</div>`;
+            }
 
             container.innerHTML = `
                 <button class="live-match-nav" onclick="navLiveScore(-1)" ${jogosAoVivoFavoritos.length <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
@@ -3719,9 +3756,10 @@
                         <img src="${home.team.logo}" alt="${home.team.displayName}">
                         <div class="live-team-name">${home.team.displayName}</div>
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:center;">
-                        <div class="live-score">${home.score} - ${away.score}</div>
-                        <div class="live-time"><i class="fas fa-circle fa-beat" style="font-size:8px;margin-right:4px;"></i>${tempo}</div>
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-width: 60px;">
+                        ${centerTopHtml}
+                        ${centerMiddleHtml}
+                        ${centerBottomHtml}
                     </div>
                     <div class="live-team">
                         <img src="${away.team.logo}" alt="${away.team.displayName}">

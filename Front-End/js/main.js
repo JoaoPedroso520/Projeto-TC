@@ -2,7 +2,9 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
 const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
 let noticiaAtual = null;
-
+let categoriaAtual = null;
+let noticiasCacheStr = '';
+let anunciosCacheStr = '';
 function extrairGoogleDriveId(url) {
     const texto = String(url || '');
     const formatos = [
@@ -68,6 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarNoticias();
     carregarAnuncios();
     setupEventListeners();
+    
+    // Auto-Refresh a cada 30 segundos
+    setInterval(() => {
+        if (categoriaAtual) {
+            carregarNoticiasPorCategoria(categoriaAtual, true);
+        } else {
+            carregarNoticias(true);
+        }
+        carregarAnuncios(true);
+    }, 30000);
 });
 
 // Setup de Event Listeners
@@ -85,38 +97,53 @@ function setupEventListeners() {
     menuLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const categoria = link.dataset.categoria;
-            carregarNoticiasPorCategoria(categoria);
+            categoriaAtual = link.dataset.categoria;
+            noticiasCacheStr = ''; // Reset cache on navigation
+            carregarNoticiasPorCategoria(categoriaAtual);
         });
     });
 
     // Home link
     document.querySelector('.menu-principal .menu-link').addEventListener('click', (e) => {
         e.preventDefault();
+        categoriaAtual = null;
+        noticiasCacheStr = ''; // Reset cache on navigation
         carregarNoticias();
     });
 }
 
 // Carregar todas as notícias
-async function carregarNoticias() {
+async function carregarNoticias(isSilencioso = false) {
     try {
         const response = await fetch(`${API_URL}/noticias`);
         const noticias = await response.json();
+        
+        const novoCache = JSON.stringify(noticias);
+        if (isSilencioso && novoCache === noticiasCacheStr) return; // Nenhuma mudança
+        noticiasCacheStr = novoCache;
+        
         exibirNoticias(noticias);
     } catch (error) {
-        console.error('Erro ao carregar notícias:', error);
-        noticiaContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Erro ao carregar notícias. Certifique-se que o servidor está rodando.</p>';
+        if (!isSilencioso) {
+            console.error('Erro ao carregar notícias:', error);
+            noticiaContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Erro ao carregar notícias. Certifique-se que o servidor está rodando.</p>';
+        }
     }
 }
 
 // Carregar notícias por categoria
-async function carregarNoticiasPorCategoria(categoria) {
+async function carregarNoticiasPorCategoria(categoria, isSilencioso = false) {
     try {
         const response = await fetch(`${API_URL}/noticias/categoria/${categoria}`);
         const noticias = await response.json();
+        
+        const novoCache = JSON.stringify(noticias);
+        if (isSilencioso && novoCache === noticiasCacheStr) return; // Nenhuma mudança
+        noticiasCacheStr = novoCache;
+        
         exibirNoticias(noticias);
     } catch (error) {
-        console.error(`Erro ao carregar notícias de ${categoria}:`, error);
+        if (!isSilencioso) console.error(`Erro ao carregar notícias de ${categoria}:`, error);
     }
 }
 
@@ -180,10 +207,14 @@ function mostrarNoticiaCompleta(noticia) {
 }
 
 // Carregar anúncios
-async function carregarAnuncios() {
+async function carregarAnuncios(isSilencioso = false) {
     try {
         const response = await fetch(`${API_URL}/anuncios`);
         const anuncios = await response.json();
+
+        const novoCache = JSON.stringify(anuncios);
+        if (isSilencioso && novoCache === anunciosCacheStr) return; // Nenhuma mudança
+        anunciosCacheStr = novoCache;
 
         // Anúncio do topo
         const anuncioBanner = anuncios.find(a => a.posicao === 'topo') || anuncios[0];
