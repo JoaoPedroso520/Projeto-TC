@@ -50,8 +50,8 @@ function otimizarImagem(url, largura = 600, qualidade = 65) {
 
     if (!/^https?:\/\//i.test(original)) return original;
 
-    const urlSemProtocolo = original.replace(/^https?:\/\//i, '');
-    return `https://images.weserv.nl/?url=${encodeURIComponent(urlSemProtocolo)}&w=${largura}&q=${qualidade}&output=webp`;
+    // Retorna a URL original diretamente para evitar a lentidão do proxy weserv.nl
+    return original;
 }
 
 function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarAnuncios();
     setupEventListeners();
     
-    // Auto-Refresh a cada 5 segundos
+    // Auto-Refresh a cada 1 segundo (quase instantâneo)
     setInterval(() => {
         if (categoriaAtual) {
             carregarNoticiasPorCategoria(categoriaAtual, true);
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carregarNoticias(true);
         }
         carregarAnuncios(true);
-    }, 5000);
+    }, 1000);
 });
 
 // Setup de Event Listeners
