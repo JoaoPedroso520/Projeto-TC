@@ -13,7 +13,7 @@ exports.obterTodas = async (req, res) => {
       .select('titulo foto categoria views createdAt updatedAt ativo')
       .limit(50)
       .lean();
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.set('Cache-Control', 'no-store');
     res.json(noticias.map(noticia => withOptimizedImage(req, noticia, 'noticias', 720, 58)));
   } catch (error) {
     res.status(500).json({ erro: error.message });
@@ -128,7 +128,7 @@ exports.obterPorCategoria = async (req, res) => {
       .select('titulo foto categoria views createdAt updatedAt ativo')
       .limit(50)
       .lean();
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.set('Cache-Control', 'no-store');
     res.json(noticias.map(noticia => withOptimizedImage(req, noticia, 'noticias', 720, 58)));
   } catch (error) {
     res.status(500).json({ erro: error.message });

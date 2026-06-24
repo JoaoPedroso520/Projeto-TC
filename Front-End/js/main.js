@@ -115,7 +115,7 @@ function setupEventListeners() {
 // Carregar todas as notícias
 async function carregarNoticias(isSilencioso = false) {
     try {
-        const response = await fetch(`${API_URL}/noticias`);
+        const response = await fetch(`${API_URL}/noticias?t=${Date.now()}`);
         const noticias = await response.json();
         
         const novoCache = JSON.stringify(noticias);
@@ -134,7 +134,7 @@ async function carregarNoticias(isSilencioso = false) {
 // Carregar notícias por categoria
 async function carregarNoticiasPorCategoria(categoria, isSilencioso = false) {
     try {
-        const response = await fetch(`${API_URL}/noticias/categoria/${categoria}`);
+        const response = await fetch(`${API_URL}/noticias/categoria/${categoria}?t=${Date.now()}`);
         const noticias = await response.json();
         
         const novoCache = JSON.stringify(noticias);
