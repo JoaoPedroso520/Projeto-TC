@@ -1488,6 +1488,112 @@
             font-size: 13px;
         }
 
+        /* LIVE SCOREBOARD WIDGET */
+        .live-scoreboard-widget {
+            background: linear-gradient(135deg, #1a0000 0%, #330000 100%);
+            border: 2px solid #ff3333;
+            border-radius: 14px;
+            padding: 16px;
+            margin: 0 0 24px;
+            width: 100%;
+            display: none;
+            position: relative;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 10px rgba(255,51,51,0.2); }
+            50% { box-shadow: 0 0 25px rgba(255,51,51,0.6); }
+            100% { box-shadow: 0 0 10px rgba(255,51,51,0.2); }
+        }
+
+        .live-scoreboard-widget h3 {
+            color: #ff4444;
+            font-size: 16px;
+            margin-bottom: 12px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .live-match-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .live-match-nav {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .live-match-nav:hover {
+            background: rgba(255, 51, 51, 0.5);
+        }
+        .live-match-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .live-match-card {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 0 10px;
+        }
+
+        .live-team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+        }
+        .live-team img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+        .live-team-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .live-score {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
+            padding: 4px 16px;
+            border-radius: 8px;
+        }
+
+        .live-time {
+            font-size: 11px;
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
         /* ESPORTES WIDGET */
         .esportes-widget {
             background: #0d0d0d;
@@ -1966,6 +2072,14 @@
     <section class="section-block" id="clima-mega-section">
         <div class="section-inner">
             <h2 class="sr-only">Esportes, Clima e Mega Sena</h2>
+
+            <!-- PLACAR AO VIVO (FAVORITOS) -->
+            <div class="live-scoreboard-widget" id="liveScoreboardWidget">
+                <h3><i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos</h3>
+                <div class="live-match-container" id="liveMatchContainer">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
 
             <!-- ESPORTES -->
             <div class="esportes-widget" id="esportesWidget">
@@ -3346,6 +3460,127 @@
             carregarJogosTime();
         }
 
+        // Lógica do Placar Ao Vivo (Favoritos)
+        let jogosAoVivoFavoritos = [];
+        let indexJogoAoVivo = 0;
+        let historicoGolsAoVivo = {}; // Salva os gols pra detectar se teve gol novo
+
+        async function carregarPlacaresAoVivo() {
+            if (timesFavoritos.length === 0) {
+                document.getElementById('liveScoreboardWidget').style.display = 'none';
+                return;
+            }
+
+            try {
+                // Busca de ambas as ligas
+                const endpoints = [
+                    'https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard',
+                    'https://site.api.espn.com/apis/site/v2/sports/soccer/bra.2/scoreboard'
+                ];
+                
+                let todosEventos = [];
+                for(let ep of endpoints) {
+                    try {
+                        const res = await fetch(ep);
+                        const data = await res.json();
+                        if (data.events) todosEventos = todosEventos.concat(data.events);
+                    } catch(e) {}
+                }
+
+                // Filtrar os que estão ao vivo e que têm um dos favoritos
+                const novosJogosAoVivo = todosEventos.filter(e => {
+                    const status = e.competitions[0].status.type.state;
+                    if (status !== 'in') return false; // Só jogos acontecendo AGORA
+                    
+                    const comp = e.competitions[0];
+                    const hasFavorito = comp.competitors.some(c => timesFavoritos.includes(c.team.id));
+                    return hasFavorito;
+                });
+
+                // Detectar se houve gol novo para mandar notificação em tempo real
+                novosJogosAoVivo.forEach(jogo => {
+                    const comp = jogo.competitions[0];
+                    const home = comp.competitors.find(c => c.homeAway === 'home');
+                    const away = comp.competitors.find(c => c.homeAway === 'away');
+                    
+                    const golsHome = parseInt(home.score) || 0;
+                    const golsAway = parseInt(away.score) || 0;
+                    const totalGols = golsHome + golsAway;
+                    
+                    const jogoKey = jogo.id;
+                    
+                    if (historicoGolsAoVivo[jogoKey] !== undefined) {
+                        if (totalGols > historicoGolsAoVivo[jogoKey]) {
+                            // Houve um gol!
+                            let msgGol = `GOOOOOL! ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                            adicionarNotificacao(msgGol, 'sport');
+                            // Toca um sonzinho se quiser
+                        }
+                    }
+                    
+                    historicoGolsAoVivo[jogoKey] = totalGols;
+                });
+
+                jogosAoVivoFavoritos = novosJogosAoVivo;
+
+                // Renderizar
+                renderLiveScoreboard();
+
+            } catch (err) {
+                console.warn('Erro ao checar placar ao vivo:', err);
+            }
+        }
+
+        function renderLiveScoreboard() {
+            const widget = document.getElementById('liveScoreboardWidget');
+            const container = document.getElementById('liveMatchContainer');
+
+            if (jogosAoVivoFavoritos.length === 0) {
+                widget.style.display = 'none';
+                return;
+            }
+
+            widget.style.display = 'block';
+
+            // Ajusta index se por acaso diminuiu o número de jogos
+            if (indexJogoAoVivo >= jogosAoVivoFavoritos.length) {
+                indexJogoAoVivo = 0;
+            }
+
+            const jogo = jogosAoVivoFavoritos[indexJogoAoVivo];
+            const comp = jogo.competitions[0];
+            const home = comp.competitors.find(c => c.homeAway === 'home');
+            const away = comp.competitors.find(c => c.homeAway === 'away');
+
+            const tempo = comp.status.displayClock + "' " + (comp.status.period === 1 ? '1ºT' : (comp.status.period === 2 ? '2ºT' : 'Int'));
+
+            container.innerHTML = `
+                <button class="live-match-nav" onclick="navLiveScore(-1)" ${jogosAoVivoFavoritos.length <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                <div class="live-match-card">
+                    <div class="live-team">
+                        <img src="${home.team.logo}" alt="${home.team.displayName}">
+                        <div class="live-team-name">${home.team.displayName}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <div class="live-score">${home.score} - ${away.score}</div>
+                        <div class="live-time"><i class="fas fa-circle fa-beat" style="font-size:8px;margin-right:4px;"></i>${tempo}</div>
+                    </div>
+                    <div class="live-team">
+                        <img src="${away.team.logo}" alt="${away.team.displayName}">
+                        <div class="live-team-name">${away.team.displayName}</div>
+                    </div>
+                </div>
+                <button class="live-match-nav" onclick="navLiveScore(1)" ${jogosAoVivoFavoritos.length <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+            `;
+        }
+
+        function navLiveScore(dir) {
+            indexJogoAoVivo += dir;
+            if (indexJogoAoVivo < 0) indexJogoAoVivo = jogosAoVivoFavoritos.length - 1;
+            if (indexJogoAoVivo >= jogosAoVivoFavoritos.length) indexJogoAoVivo = 0;
+            renderLiveScoreboard();
+        }
+
         // Cache global de jogos carregados do time atual
         let jogosCache = [];
         let jogosPaginaAtual = 0;
@@ -3487,6 +3722,9 @@
             atualizarBadgeNotificacoes();
             timesVisiveis = getTimesLimite();
             renderEsportes();
+            carregarPlacaresAoVivo();
+            setInterval(carregarPlacaresAoVivo, 60000); // Atualiza os jogos ao vivo a cada minuto
+
             travarBounceSafari();
             atualizarBotaoLimparBusca();
             carregarCategoriasPublicas();
