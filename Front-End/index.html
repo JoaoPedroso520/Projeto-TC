@@ -1563,6 +1563,23 @@
             letter-spacing: 1px;
         }
 
+        .live-scoreboard-widget.pre-game {
+            background: linear-gradient(135deg, #001a00 0%, #003300 100%);
+            border: 2px solid #33ff33;
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+            animation: pulse-border-green 2s infinite;
+        }
+
+        @keyframes pulse-border-green {
+            0% { box-shadow: 0 0 10px rgba(51,255,51,0.2); }
+            50% { box-shadow: 0 0 25px rgba(51,255,51,0.6); }
+            100% { box-shadow: 0 0 10px rgba(51,255,51,0.2); }
+        }
+
+        .live-scoreboard-widget.pre-game h3 {
+            color: #33ff33;
+        }
+
         .live-match-container {
             display: flex;
             align-items: center;
@@ -3868,8 +3885,10 @@
             if (titleEl) {
                 if (state === 'pre') {
                     titleEl.innerHTML = '<i class="far fa-calendar-alt"></i> Hoje - Seus Favoritos';
+                    widget.classList.add('pre-game');
                 } else {
                     titleEl.innerHTML = '<i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos';
+                    widget.classList.remove('pre-game');
                 }
             }
             
