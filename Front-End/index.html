@@ -2417,7 +2417,8 @@
 
             try {
                 setFiltroAtivo('');
-                const res = await fetch(`${API_URL}/noticias`, { cache: 'default' });
+                // Evitar cache do navegador para mostrar notícias recém-criadas na hora
+                const res = await fetch(`${API_URL}/noticias?t=${Date.now()}`, { cache: 'no-store' });
                 console.log('Response status:', res.status);
 
                 if (!res.ok) {
@@ -2450,9 +2451,10 @@
 
             try {
                 setFiltroAtivo(cat);
-                const url = `${API_URL}/noticias/categoria/${encodeURIComponent(cat)}`;
+                // Evitar cache do navegador
+                const url = `${API_URL}/noticias/categoria/${encodeURIComponent(cat)}?t=${Date.now()}`;
                 console.log('URL:', url);
-                const res = await fetch(url);
+                const res = await fetch(url, { cache: 'no-store' });
                 console.log('Response status:', res.status);
 
                 if (!res.ok) {
@@ -2762,7 +2764,8 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/categorias?ativas=true`);
+                // Evitar cache do navegador
+                const res = await fetch(`${API_URL}/categorias?ativas=true&t=${Date.now()}`, { cache: 'no-store' });
                 const data = await res.json();
                 categoriasCache = (data || []).map(c => c.nome || c);
                 setCache(CATEGORIAS_CACHE_KEY, categoriasCache);
@@ -3317,7 +3320,27 @@
             { id: '3459', nome: 'Ponte Preta', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3459.png', tipo: 'Série B', liga: 'bra.2' },
             { id: '7635', nome: 'Sport', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7635.png', tipo: 'Série B', liga: 'bra.2' },
             { id: '11268', nome: 'São Bernardo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11268.png', tipo: 'Série B', liga: 'bra.2' },
-            { id: '9973', nome: 'Vila Nova', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9973.png', tipo: 'Série B', liga: 'bra.2' }
+            { id: '9973', nome: 'Vila Nova', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9973.png', tipo: 'Série B', liga: 'bra.2' },
+            // Libertadores / Sul-Americana
+            { id: '5', nome: 'Boca Juniors', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/5.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '16', nome: 'River Plate', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/16.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2683', nome: 'Peñarol', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2683.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2684', nome: 'Nacional', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2684.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '17086', nome: 'Independiente del Valle', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/17086.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '4816', nome: 'Liga de Quito', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/4816.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '8', nome: 'Estudiantes', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '17', nome: 'Rosario Central', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/17.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2671', nome: 'Cerro Porteño', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2671.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2670', nome: 'Libertad', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2670.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2686', nome: 'Barcelona SC', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2686.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2681', nome: 'Bolívar', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2681.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '7764', nome: 'Platense', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7764.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '885', nome: 'Universidad Católica', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/885.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2685', nome: 'Universitario', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2685.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '19425', nome: 'Always Ready', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/19425.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '3', nome: 'Argentinos Juniors', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '12', nome: 'Lanús', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/12.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' },
+            { id: '2673', nome: 'Sporting Cristal', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2673.png', tipo: 'Libertadores', liga: 'conmebol.libertadores' }
         ];
 
         let timesFavoritos = JSON.parse(getStorage().getItem('c7-times-favoritos') || '[]');
