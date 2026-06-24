@@ -2181,7 +2181,7 @@
 
             <!-- PLACAR AO VIVO (FAVORITOS) -->
             <div class="live-scoreboard-widget" id="liveScoreboardWidget">
-                <h3><i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos</h3>
+                <h3 id="liveScoreboardTitle"><i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos</h3>
                 <div class="live-match-container" id="liveMatchContainer">
                     <!-- Preenchido via JS -->
                 </div>
@@ -3863,6 +3863,15 @@
             let centerTopHtml = '';
             let centerMiddleHtml = '';
             let centerBottomHtml = '';
+            
+            const titleEl = document.getElementById('liveScoreboardTitle');
+            if (titleEl) {
+                if (state === 'pre') {
+                    titleEl.innerHTML = '<i class="far fa-calendar-alt"></i> Hoje - Seus Favoritos';
+                } else {
+                    titleEl.innerHTML = '<i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos';
+                }
+            }
             
             if (state === 'in') {
                 const tempo = comp.status.displayClock + "' " + (comp.status.period === 1 ? '1ºT' : (comp.status.period === 2 ? '2ºT' : 'Int'));
