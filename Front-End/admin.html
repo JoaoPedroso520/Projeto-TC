@@ -1278,11 +1278,17 @@
         document.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
             
-            // Auto-Refresh
+            // Auto-Refresh Rápido (Views/Notícias a cada segundo)
+            setInterval(() => {
+                if (usuarioAutenticado) {
+                    carregarNoticias();
+                }
+            }, 1000);
+
+            // Auto-Refresh Normal (Categorias e Anúncios a cada 30s)
             setInterval(() => {
                 if (usuarioAutenticado) {
                     carregarCategorias();
-                    carregarNoticias();
                     carregarAnuncios();
                 }
             }, 30000);
