@@ -1934,11 +1934,20 @@
         }
 
         .jogo-time-nome {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 13px;
             font-weight: 600;
             color: #e0e0e0;
             flex: 1;
             min-width: 0;
+        }
+
+        .time-nome-texto {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .jogo-placar {
@@ -2019,6 +2028,28 @@
                 max-width: 90vw;
                 max-height: 60vh;
                 border-radius: 14px;
+            }
+
+            .time-modal {
+                padding: 20px 10px;
+            }
+
+            .jogo-card {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .jogo-data {
+                width: 100%;
+                text-align: center;
+                margin-top: 4px;
+            }
+
+            .time-nome-texto {
+                font-size: 11px;
+                max-width: 80px;
             }
 
             .esportes-times-grid {
@@ -3939,12 +3970,20 @@
                     }
 
                     const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '').replace('2026 ', '') : 'Campeonato';
+                    const homeLogo = homeTeam.team.logo || (homeTeam.team.logos && homeTeam.team.logos[0] ? homeTeam.team.logos[0].href : 'img/C7.png');
+                    const awayLogo = awayTeam.team.logo || (awayTeam.team.logos && awayTeam.team.logos[0] ? awayTeam.team.logos[0].href : 'img/C7.png');
 
                     return `
                         <div class="jogo-card">
-                            <div class="jogo-time-nome" style="text-align: right;">${homeTeam.team.displayName}</div>
+                            <div class="jogo-time-nome" style="justify-content: flex-end;">
+                                <span class="time-nome-texto">${homeTeam.team.displayName}</span>
+                                <img src="${homeLogo}" loading="lazy" decoding="async" alt="${homeTeam.team.displayName}">
+                            </div>
                             <div class="jogo-placar">${placar}</div>
-                            <div class="jogo-time-nome">${awayTeam.team.displayName}</div>
+                            <div class="jogo-time-nome" style="justify-content: flex-start;">
+                                <img src="${awayLogo}" loading="lazy" decoding="async" alt="${awayTeam.team.displayName}">
+                                <span class="time-nome-texto">${awayTeam.team.displayName}</span>
+                            </div>
                             <div class="jogo-data">${formatada}<br>${campeonato}</div>
                         </div>
                     `;
