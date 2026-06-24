@@ -1508,10 +1508,65 @@
             gap: 10px;
         }
 
+        .esportes-search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(0,204,0,0.25);
+            border-radius: 10px;
+            padding: 6px 12px;
+            transition: border-color 0.3s;
+        }
+        .esportes-search-bar:focus-within {
+            border-color: #00ff00;
+            box-shadow: 0 0 12px rgba(0,204,0,0.2);
+        }
+        .esportes-search-bar i {
+            color: #00cc00;
+            font-size: 14px;
+        }
+        .esportes-search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            width: 100%;
+            padding: 6px 0;
+        }
+        .esportes-search-bar input::placeholder {
+            color: #666;
+        }
+
         .esportes-times-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 12px;
+        }
+
+        .esportes-ver-mais {
+            display: flex;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        .esportes-ver-mais button {
+            background: rgba(0,204,0,0.1);
+            border: 1px solid rgba(0,204,0,0.35);
+            color: #00cc00;
+            padding: 10px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .esportes-ver-mais button:hover {
+            background: rgba(0,204,0,0.2);
+            border-color: #00ff00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,204,0,0.25);
         }
 
         .esporte-time-card {
@@ -1915,8 +1970,15 @@
             <!-- ESPORTES -->
             <div class="esportes-widget" id="esportesWidget">
                 <h3><i class="fas fa-futbol"></i> Esportes</h3>
+                <div class="esportes-search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="esportesSearchInput" placeholder="Buscar time..." oninput="renderEsportes()">
+                </div>
                 <div class="esportes-times-grid" id="esportesTimesGrid">
                     <p style="grid-column: 1/-1; text-align: center; padding: 20px; color: #888;"><i class="fas fa-spinner fa-spin"></i> Carregando times...</p>
+                </div>
+                <div class="esportes-ver-mais" id="esportesVerMais" style="display:none;">
+                    <button onclick="mostrarMaisTimes()"><i class="fas fa-chevron-down"></i> Ver mais times</button>
                 </div>
             </div>
 
@@ -3098,25 +3160,60 @@
         });
 
 
-        // ESPORTES
+        // ESPORTES - Todos os times do futebol brasileiro (Série A + B) via ESPN
         const timesBrasileiros = [
-            { id: '819', nome: 'Flamengo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/819.png', tipo: 'Série A' },
-            { id: '2029', nome: 'Palmeiras', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2029.png', tipo: 'Série A' },
-            { id: '2026', nome: 'São Paulo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2026.png', tipo: 'Série A' },
-            { id: '874', nome: 'Corinthians', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/874.png', tipo: 'Série A' },
-            { id: '3445', nome: 'Fluminense', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3445.png', tipo: 'Série A' },
-            { id: '6273', nome: 'Grêmio', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6273.png', tipo: 'Série A' },
-            { id: '1936', nome: 'Internacional', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1936.png', tipo: 'Série A' },
-            { id: '7632', nome: 'Atlético-MG', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7632.png', tipo: 'Série A' },
-            { id: '2022', nome: 'Cruzeiro', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2022.png', tipo: 'Série A' },
-            { id: '6086', nome: 'Botafogo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6086.png', tipo: 'Série A' },
-            { id: '3454', nome: 'Vasco', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3454.png', tipo: 'Série A' },
-            { id: '2674', nome: 'Santos', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2674.png', tipo: 'Série B' }
+            // Série A
+            { id: '819', nome: 'Flamengo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/819.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '2029', nome: 'Palmeiras', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2029.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '2026', nome: 'São Paulo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2026.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '874', nome: 'Corinthians', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/874.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '3445', nome: 'Fluminense', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3445.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '6273', nome: 'Grêmio', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6273.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '1936', nome: 'Internacional', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1936.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '7632', nome: 'Atlético-MG', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7632.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '2022', nome: 'Cruzeiro', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2022.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '6086', nome: 'Botafogo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6086.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '3454', nome: 'Vasco', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3454.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '2674', nome: 'Santos', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2674.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '3458', nome: 'Athletico-PR', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3458.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '9967', nome: 'Bahia', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9967.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '9318', nome: 'Chapecoense', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9318.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '3456', nome: 'Coritiba', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3456.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '9169', nome: 'Mirassol', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9169.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '6079', nome: 'Bragantino', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6079.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '4936', nome: 'Remo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/4936.png', tipo: 'Série A', liga: 'bra.1' },
+            { id: '3457', nome: 'Vitória', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3457.png', tipo: 'Série A', liga: 'bra.1' },
+            // Série B
+            { id: '6154', nome: 'América-MG', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6154.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '20851', nome: 'Athletic', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/20851.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '10357', nome: 'Atlético-GO', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/10357.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '9966', nome: 'Avaí', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9966.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '10281', nome: 'Botafogo-SP', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/10281.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '9970', nome: 'CRB', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9970.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '9969', nome: 'Ceará', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9969.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '9971', nome: 'Criciúma', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9971.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '17313', nome: 'Cuiabá', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/17313.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '6272', nome: 'Fortaleza', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6272.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '3395', nome: 'Goiás', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3395.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '6270', nome: 'Juventude', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6270.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '17333', nome: 'Londrina', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/17333.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '18127', nome: 'Novorizontino', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/18127.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '7633', nome: 'Náutico', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7633.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '18187', nome: 'Operário-PR', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/18187.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '3459', nome: 'Ponte Preta', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3459.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '7635', nome: 'Sport', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7635.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '11268', nome: 'São Bernardo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11268.png', tipo: 'Série B', liga: 'bra.2' },
+            { id: '9973', nome: 'Vila Nova', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/9973.png', tipo: 'Série B', liga: 'bra.2' }
         ];
 
         let timesFavoritos = JSON.parse(getStorage().getItem('c7-times-favoritos') || '[]');
         let timeModalAtual = null;
         let tabAtual = 'ultimos';
+        let timesVisiveis = 0; // Controlado pelo renderEsportes
+
+        function getTimesLimite() {
+            return window.innerWidth <= 768 ? 12 : 20;
+        }
 
         function salvarFavoritos() {
             getStorage().setItem('c7-times-favoritos', JSON.stringify(timesFavoritos));
@@ -3164,10 +3261,22 @@
 
         function renderEsportes() {
             const grid = document.getElementById('esportesTimesGrid');
+            const verMaisDiv = document.getElementById('esportesVerMais');
             if (!grid) return;
 
+            const searchInput = document.getElementById('esportesSearchInput');
+            const busca = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            // Filtrar pela busca
+            let timesFiltrados = timesBrasileiros;
+            if (busca) {
+                timesFiltrados = timesBrasileiros.filter(t =>
+                    t.nome.toLowerCase().includes(busca) || t.tipo.toLowerCase().includes(busca)
+                );
+            }
+
             // Ordenar: Favoritos primeiro
-            const timesOrdenados = [...timesBrasileiros].sort((a, b) => {
+            const timesOrdenados = [...timesFiltrados].sort((a, b) => {
                 const aFav = timesFavoritos.includes(a.id);
                 const bFav = timesFavoritos.includes(b.id);
                 if (aFav && !bFav) return -1;
@@ -3175,16 +3284,37 @@
                 return 0;
             });
 
-            grid.innerHTML = timesOrdenados.map(time => {
+            // Se buscando, mostrar todos. Senão, limitar.
+            const limite = busca ? timesOrdenados.length : timesVisiveis;
+            const timesParaMostrar = timesOrdenados.slice(0, limite);
+
+            grid.innerHTML = timesParaMostrar.map(time => {
                 const isFav = timesFavoritos.includes(time.id);
                 return `
                     <div class="esporte-time-card" onclick="abrirTimeModal('${time.id}')">
                         <i class="${isFav ? 'fas' : 'far'} fa-star esporte-fav-star ${isFav ? 'favorito' : ''}" onclick="toggleFavorito('${time.id}', event)"></i>
                         <img src="${time.escudo}" alt="${time.nome}" loading="lazy">
                         <div class="esporte-time-nome">${time.nome}</div>
+                        <div style="font-size:9px;color:#666;margin-top:2px;">${time.tipo}</div>
                     </div>
                 `;
             }).join('');
+
+            // Mostrar/ocultar botão "Ver mais"
+            if (verMaisDiv) {
+                if (!busca && timesOrdenados.length > limite) {
+                    verMaisDiv.style.display = 'flex';
+                    verMaisDiv.querySelector('button').innerHTML = `<i class="fas fa-chevron-down"></i> Ver mais times (${timesOrdenados.length - limite} restantes)`;
+                } else {
+                    verMaisDiv.style.display = 'none';
+                }
+            }
+        }
+
+        function mostrarMaisTimes() {
+            const incremento = getTimesLimite();
+            timesVisiveis += incremento;
+            renderEsportes();
         }
 
         function abrirTimeModal(id) {
@@ -3216,40 +3346,68 @@
             carregarJogosTime();
         }
 
+        // Cache global de jogos carregados do time atual
+        let jogosCache = [];
+        let jogosPaginaAtual = 0;
+        const JOGOS_POR_PAGINA = 20;
+
         async function carregarJogosTime() {
             const container = document.getElementById('timeJogosContainer');
             if (!timeModalAtual) return;
 
+            jogosPaginaAtual = 0;
+            jogosCache = [];
+
             container.innerHTML = '<div class="jogos-loading"><i class="fas fa-spinner fa-spin"></i> Carregando jogos reais da ESPN...</div>';
 
             try {
-                // Endpoint aberto da ESPN
-                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/teams/${timeModalAtual.id}/schedule`;
+                // Tenta primeiro a liga principal do time, depois a outra
+                const liga = timeModalAtual.liga || 'bra.1';
+                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/teams/${timeModalAtual.id}/schedule`;
                 const response = await fetch(endpoint);
                 const data = await response.json();
                 
                 let events = data.events || [];
                 const agora = new Date();
 
-                // Filtrar os eventos de acordo com a aba selecionada (ultimos ou proximos)
+                // Filtrar os eventos de acordo com a aba selecionada
                 if (tabAtual === 'ultimos') {
-                    events = events.filter(e => {
-                        const date = new Date(e.date);
-                        return date <= agora && e.competitions[0].status.type.completed;
-                    }).reverse().slice(0, 10); // Últimos 10 jogos
+                    jogosCache = events.filter(e => {
+                        try {
+                            const date = new Date(e.date);
+                            return date <= agora && e.competitions[0].status.type.completed;
+                        } catch(err) { return false; }
+                    }).reverse(); // Mais recentes primeiro
                 } else {
-                    events = events.filter(e => {
-                        const date = new Date(e.date);
-                        return date > agora || !e.competitions[0].status.type.completed;
-                    }).slice(0, 10); // Próximos 10 jogos
+                    jogosCache = events.filter(e => {
+                        try {
+                            const date = new Date(e.date);
+                            return date > agora || !e.competitions[0].status.type.completed;
+                        } catch(err) { return false; }
+                    });
                 }
 
-                if (events.length === 0) {
+                if (jogosCache.length === 0) {
                     container.innerHTML = '<div class="notif-empty">Nenhum jogo encontrado para esta aba.</div>';
                     return;
                 }
 
-                container.innerHTML = events.map(jogo => {
+                renderJogosPagina();
+
+            } catch (err) {
+                console.warn('Erro ao carregar jogos:', err);
+                container.innerHTML = '<div class="notif-empty" style="color: #ff6b6b;">Erro ao carregar dados dos jogos.</div>';
+            }
+        }
+
+        function renderJogosPagina() {
+            const container = document.getElementById('timeJogosContainer');
+            const inicio = 0;
+            const fim = (jogosPaginaAtual + 1) * JOGOS_POR_PAGINA;
+            const jogosParaMostrar = jogosCache.slice(inicio, fim);
+
+            container.innerHTML = jogosParaMostrar.map(jogo => {
+                try {
                     const comp = jogo.competitions[0];
                     const homeTeam = comp.competitors.find(c => c.homeAway === 'home');
                     const awayTeam = comp.competitors.find(c => c.homeAway === 'away');
@@ -3258,13 +3416,13 @@
                     const formatada = dataJogo.toLocaleDateString('pt-BR') + ' ' + dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
                     let placar = 'vs';
-                    if (tabAtual === 'ultimos' && homeTeam.score && awayTeam.score) {
-                        placar = `${homeTeam.score.displayValue} - ${awayTeam.score.displayValue}`;
+                    if (comp.status.type.completed && homeTeam.score && awayTeam.score) {
+                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue;
                     } else if (comp.status.type.state === 'in') {
-                        placar = `${homeTeam.score.displayValue} - ${awayTeam.score.displayValue} (Ao vivo)`;
+                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue + ' (Ao vivo)';
                     }
 
-                    const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '') : 'Campeonato Brasileiro';
+                    const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '').replace('2026 ', '') : 'Campeonato';
 
                     return `
                         <div class="jogo-card">
@@ -3274,12 +3432,23 @@
                             <div class="jogo-data">${formatada}<br>${campeonato}</div>
                         </div>
                     `;
-                }).join('');
+                } catch(e) { return ''; }
+            }).join('');
 
-            } catch (err) {
-                console.warn('Erro ao carregar jogos:', err);
-                container.innerHTML = '<div class="notif-empty" style="color: #ff6b6b;">Erro ao carregar dados dos jogos.</div>';
+            // Botão "Ver mais jogos" se existem mais
+            if (fim < jogosCache.length) {
+                const restantes = jogosCache.length - fim;
+                container.innerHTML += `
+                    <div class="esportes-ver-mais" style="margin-top:12px;">
+                        <button onclick="verMaisJogos()"><i class="fas fa-chevron-down"></i> Ver mais jogos (${restantes} restantes)</button>
+                    </div>
+                `;
             }
+        }
+
+        function verMaisJogos() {
+            jogosPaginaAtual++;
+            renderJogosPagina();
         }
 
         // Simula checagem de resultados para times favoritos (apenas visualmente para notificar)
@@ -3316,6 +3485,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Página pronta, iniciando carregamento rápido de notícias...');
             atualizarBadgeNotificacoes();
+            timesVisiveis = getTimesLimite();
             renderEsportes();
             travarBounceSafari();
             atualizarBotaoLimparBusca();
