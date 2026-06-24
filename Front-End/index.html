@@ -3596,9 +3596,8 @@
             container.innerHTML = '<div class="jogos-loading"><i class="fas fa-spinner fa-spin"></i> Carregando jogos reais da ESPN...</div>';
 
             try {
-                // Tenta primeiro a liga principal do time, depois a outra
-                const liga = timeModalAtual.liga || 'bra.1';
-                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/teams/${timeModalAtual.id}/schedule`;
+                // Endpoint 'all' para pegar TODAS as competições do time (Brasileirão, Copa do Brasil, Libertadores, etc.)
+                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${timeModalAtual.id}/schedule`;
                 const response = await fetch(endpoint);
                 const data = await response.json();
                 
@@ -3612,7 +3611,9 @@
                             const date = new Date(e.date);
                             return date <= agora && e.competitions[0].status.type.completed;
                         } catch(err) { return false; }
-                    }).reverse(); // Mais recentes primeiro
+                    });
+                    // Ordenar por data mais recente primeiro (descrescente)
+                    jogosCache.sort((a, b) => new Date(b.date) - new Date(a.date));
                 } else {
                     jogosCache = events.filter(e => {
                         try {
@@ -3620,6 +3621,8 @@
                             return date > agora || !e.competitions[0].status.type.completed;
                         } catch(err) { return false; }
                     });
+                    // Ordenar por data mais próxima primeiro (crescente)
+                    jogosCache.sort((a, b) => new Date(a.date) - new Date(b.date));
                 }
 
                 if (jogosCache.length === 0) {
