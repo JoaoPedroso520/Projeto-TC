@@ -3659,6 +3659,9 @@
                     adicionarNotificacao(`Você favoritou o ${time.nome}. Receberá notificações sobre resultados.`, 'sport');
                 }
             }
+            const agoraFav = new Date();
+            const hojeDataStrFav = `${agoraFav.getFullYear()}-${agoraFav.getMonth()}-${agoraFav.getDate()}`;
+            getStorage().removeItem(`c7-notif-fim-${hojeDataStrFav}`);
             salvarFavoritos();
             renderEsportes();
             if (timeModalAtual && timeModalAtual.id === id) {
@@ -4141,10 +4144,13 @@
                     const formatada = dataJogo.toLocaleDateString('pt-BR') + ' ' + dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
                     let placar = 'vs';
-                    if (comp.status.type.completed && homeTeam.score && awayTeam.score) {
-                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue;
-                    } else if (comp.status.type.state === 'in') {
-                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue + ' (Ao vivo)';
+                    let hScore = homeTeam.score !== undefined ? (typeof homeTeam.score === 'object' ? homeTeam.score.displayValue : homeTeam.score) : null;
+                    let aScore = awayTeam.score !== undefined ? (typeof awayTeam.score === 'object' ? awayTeam.score.displayValue : awayTeam.score) : null;
+                    
+                    if (comp.status.type.completed && hScore !== null && aScore !== null) {
+                        placar = hScore + ' - ' + aScore;
+                    } else if (comp.status.type.state === 'in' && hScore !== null && aScore !== null) {
+                        placar = hScore + ' - ' + aScore + ' (Ao vivo)';
                     }
 
                     const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '').replace('2026 ', '') : 'Campeonato';
@@ -4234,7 +4240,7 @@
             
             // Loop de atualização silenciosa para mostrar novas notícias instantaneamente
             setInterval(() => {
-                const searchInput = document.getElementById('search-input');
+                const searchInput = document.getElementById('buscaInput');
                 if (!searchInput || searchInput.value.trim() === '') {
                     if (window.categoriaAtualLoop) {
                         carregarPorCategoria(window.categoriaAtualLoop, true);
