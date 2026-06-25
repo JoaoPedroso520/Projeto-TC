@@ -3659,9 +3659,13 @@
                     adicionarNotificacao(`Você favoritou o ${time.nome}. Receberá notificações sobre resultados.`, 'sport');
                 }
             }
+            // Limpa o cache de notificações deste time específico para que a notificação reapareça apenas para ele
             const agoraFav = new Date();
             const hojeDataStrFav = `${agoraFav.getFullYear()}-${agoraFav.getMonth()}-${agoraFav.getDate()}`;
-            getStorage().removeItem(`c7-notif-fim-${hojeDataStrFav}`);
+            const key = `c7-notif-fim-${hojeDataStrFav}`;
+            const notifs = JSON.parse(getStorage().getItem(key) || '{}');
+            delete notifs[id];
+            getStorage().setItem(key, JSON.stringify(notifs));
             salvarFavoritos();
             renderEsportes();
             if (timeModalAtual && timeModalAtual.id === id) {
@@ -3873,33 +3877,34 @@
                     const notificadosKey = `c7-notif-fim-${hojeStr}`;
                     const notificadosHoje = JSON.parse(getStorage().getItem(notificadosKey) || '{}');
                     
-                    if (isFim && !notificadosHoje[jogoKey]) {
-                        let favIndex = -1;
-                        if (timesFavoritos.includes(home.team.id)) { favIndex = 0; }
-                        else if (timesFavoritos.includes(away.team.id)) { favIndex = 1; }
+                    if (isFim) {
+                        const favTeamsInMatch = [];
+                        if (timesFavoritos.includes(home.team.id)) favTeamsInMatch.push({ id: home.team.id, isHome: true });
+                        if (timesFavoritos.includes(away.team.id)) favTeamsInMatch.push({ id: away.team.id, isHome: false });
                         
-                        let msgFim = '';
-                        if (favIndex !== -1) {
-                            const myTeam = favIndex === 0 ? home : away;
-                            const otherTeam = favIndex === 0 ? away : home;
-                            const myScore = parseInt(myTeam.score) || 0;
-                            const otherScore = parseInt(otherTeam.score) || 0;
-                            
-                            if (myScore > otherScore) {
-                                msgFim = `VENCEDOR!! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
-                            } else if (myScore === otherScore) {
-                                msgFim = `EMPATE! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
-                            } else {
-                                msgFim = `NÃO FOI DESSA VEZ! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                        favTeamsInMatch.forEach(fav => {
+                            if (!notificadosHoje[fav.id]) {
+                                const myTeam = fav.isHome ? home : away;
+                                const otherTeam = fav.isHome ? away : home;
+                                const myScore = parseInt(myTeam.score) || 0;
+                                const otherScore = parseInt(otherTeam.score) || 0;
+                                let msgFim = '';
+                                
+                                if (myScore > otherScore) {
+                                    msgFim = `VENCEDOR!! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                } else if (myScore === otherScore) {
+                                    msgFim = `EMPATE! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                } else {
+                                    msgFim = `NÃO FOI DESSA VEZ! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                }
+                                
+                                mostrarToastAoVivo(msgFim);
+                                adicionarNotificacao(msgFim, 'sport');
+                                
+                                notificadosHoje[fav.id] = true;
+                                getStorage().setItem(notificadosKey, JSON.stringify(notificadosHoje));
                             }
-                        } else {
-                            msgFim = `FIM DE JOGO: ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
-                        }
-                        mostrarToastAoVivo(msgFim);
-                        adicionarNotificacao(msgFim, 'sport');
-                        
-                        notificadosHoje[jogoKey] = true;
-                        getStorage().setItem(notificadosKey, JSON.stringify(notificadosHoje));
+                        });
                     }
                     historicoStatusAoVivo[jogoKey] = status;
                 });
