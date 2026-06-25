@@ -2227,6 +2227,7 @@
                 <div class="esportes-search-bar">
                     <i class="fas fa-search"></i>
                     <input type="text" id="esportesSearchInput" placeholder="Buscar time..." oninput="renderEsportes()">
+                    <i class="fas fa-times" id="clearEsportesSearch" onclick="limparBuscaEsportes()" style="display: none; color: #ff4444; cursor: pointer; margin-left: auto; font-size: 16px;"></i>
                 </div>
                 <div class="esportes-times-grid" id="esportesTimesGrid">
                     <p style="grid-column: 1/-1; text-align: center; padding: 20px; color: #888;"><i class="fas fa-spinner fa-spin"></i> Carregando times...</p>
@@ -3695,13 +3696,26 @@
             }
         }
 
+        function limparBuscaEsportes() {
+            const searchInput = document.getElementById('esportesSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                renderEsportes();
+            }
+        }
+
         function renderEsportes() {
             const grid = document.getElementById('esportesTimesGrid');
             const verMaisDiv = document.getElementById('esportesVerMais');
             if (!grid) return;
 
             const searchInput = document.getElementById('esportesSearchInput');
+            const clearBtn = document.getElementById('clearEsportesSearch');
             const busca = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            if (clearBtn) {
+                clearBtn.style.display = busca ? 'block' : 'none';
+            }
 
             // Filtrar pela busca
             let timesFiltrados = timesBrasileiros;
