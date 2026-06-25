@@ -4022,6 +4022,39 @@
                 let events = data.events || [];
                 const agora = new Date();
 
+                // Fallback para 'ultimos': a API schedule às vezes demora para incluir o jogo de hoje que acabou de terminar
+                if (tabAtual === 'ultimos') {
+                    const ligaMap = {
+                        'Serie A': 'bra.1', 'Serie B': 'bra.2', 'Libertadores': 'conmebol.libertadores',
+                        'Premier League': 'eng.1', 'La Liga': 'esp.1', 'Serie A Italy': 'ita.1',
+                        'Bundesliga': 'ger.1', 'Ligue 1': 'fra.1', 'Champions': 'uefa.champions',
+                        'World Cup': 'fifa.world', 'Seleção': 'fifa.world'
+                    };
+                    const liga = ligaMap[timeModalAtual.tipo] || 'all';
+                    
+                    const dOntem = new Date(agora);
+                    dOntem.setDate(dOntem.getDate() - 2); // busca últimos 2 dias para garantir
+                    const d1 = dOntem.toISOString().split('T')[0].replace(/-/g, '');
+                    const d2 = agora.toISOString().split('T')[0].replace(/-/g, '');
+                    
+                    try {
+                        const sbEndpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard?lang=pt&region=br&dates=${d1}-${d2}&limit=100`;
+                        const sbRes = await fetch(sbEndpoint);
+                        const sbData = await sbRes.json();
+                        if (sbData.events) {
+                            const jogosDoTime = sbData.events.filter(e => {
+                                return e.competitions && e.competitions[0] && e.competitions[0].competitors.some(c => c.team.id === timeModalAtual.id);
+                            });
+                            const idsExistentes = new Set(events.map(e => e.id));
+                            jogosDoTime.forEach(j => {
+                                if (!idsExistentes.has(j.id)) events.push(j);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Erro ao carregar fallback de ultimos', e);
+                    }
+                }
+
                 // Se for a aba 'proximos' e a API não retornou jogos futuros, busca do scoreboard da liga
                 if (tabAtual === 'proximos') {
                     const temFuturos = events.some(e => new Date(e.date) > agora);
