@@ -1580,6 +1580,16 @@
             color: #33ff33;
         }
 
+        .live-scoreboard-widget.post-game {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+            border: 2px solid #888888;
+            box-shadow: 0 0 10px rgba(136, 136, 136, 0.3);
+        }
+
+        .live-scoreboard-widget.post-game h3 {
+            color: #aaaaaa;
+        }
+
         .live-match-container {
             display: flex;
             align-items: center;
@@ -3850,7 +3860,27 @@
 
                     const oldStatus = historicoStatusAoVivo[jogoKey];
                     if (oldStatus === 'in' && (status === 'post' || comp.status.type.completed)) {
-                        let msgFim = `FIM DE JOGO: ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                        let favIndex = -1;
+                        if (timesFavoritos.includes(home.team.id)) { favIndex = 0; }
+                        else if (timesFavoritos.includes(away.team.id)) { favIndex = 1; }
+                        
+                        let msgFim = '';
+                        if (favIndex !== -1) {
+                            const myTeam = favIndex === 0 ? home : away;
+                            const otherTeam = favIndex === 0 ? away : home;
+                            const myScore = parseInt(myTeam.score) || 0;
+                            const otherScore = parseInt(otherTeam.score) || 0;
+                            
+                            if (myScore > otherScore) {
+                                msgFim = `VENCEDOR!! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                            } else if (myScore === otherScore) {
+                                msgFim = `EMPATE! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                            } else {
+                                msgFim = `NÃO FOI DESSA VEZ! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                            }
+                        } else {
+                            msgFim = `FIM DE JOGO: ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
+                        }
                         mostrarToastAoVivo(msgFim);
                         adicionarNotificacao(msgFim, 'sport');
                     }
@@ -3859,7 +3889,7 @@
 
                 jogosAoVivoFavoritos = novosJogosAoVivo.filter(j => {
                     const st = j.competitions[0].status.type.state;
-                    return st === 'in' || st === 'pre';
+                    return st === 'in' || st === 'pre' || st === 'post';
                 });
 
                 // Renderizar
@@ -3898,12 +3928,15 @@
             
             const titleEl = document.getElementById('liveScoreboardTitle');
             if (titleEl) {
+                widget.classList.remove('pre-game', 'post-game');
                 if (state === 'pre') {
                     titleEl.innerHTML = '<i class="far fa-calendar-alt"></i> Hoje - Seus Favoritos';
                     widget.classList.add('pre-game');
+                } else if (state === 'post') {
+                    titleEl.innerHTML = '<i class="fas fa-check-circle"></i> Encerrado - Seus Favoritos';
+                    widget.classList.add('post-game');
                 } else {
                     titleEl.innerHTML = '<i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos';
-                    widget.classList.remove('pre-game');
                 }
             }
             
@@ -3918,6 +3951,10 @@
                 centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #ffeb3b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Hoje</div>`;
                 centerMiddleHtml = `<div class="live-score" style="color: #aaa; font-size: 1.2rem;">VS</div>`;
                 centerBottomHtml = `<div class="live-time" style="color: #ccc; margin-top: 4px; text-align: center;"><i class="far fa-clock" style="font-size:10px;margin-right:4px;"></i>${dataFormatada} - ${horario}</div>`;
+            } else if (state === 'post') {
+                centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Fim de Jogo</div>`;
+                centerMiddleHtml = `<div class="live-score" style="color: #ffffff;">${home.score} - ${away.score}</div>`;
+                centerBottomHtml = ``;
             }
 
             container.innerHTML = `
