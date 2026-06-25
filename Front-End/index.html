@@ -1581,13 +1581,20 @@
         }
 
         .live-scoreboard-widget.post-game {
-            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
-            border: 2px solid #888888;
-            box-shadow: 0 0 10px rgba(136, 136, 136, 0.3);
+            background: linear-gradient(135deg, #1a1500 0%, #332b00 100%);
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+            animation: pulse-border-yellow 2s infinite;
+        }
+
+        @keyframes pulse-border-yellow {
+            0% { box-shadow: 0 0 10px rgba(255,204,0,0.2); }
+            50% { box-shadow: 0 0 25px rgba(255,204,0,0.6); }
+            100% { box-shadow: 0 0 10px rgba(255,204,0,0.2); }
         }
 
         .live-scoreboard-widget.post-game h3 {
-            color: #aaaaaa;
+            color: #ffcc00;
         }
 
         .live-match-container {
@@ -3822,12 +3829,13 @@
                 }
 
                 const agora = new Date();
-                const hojeStr = agora.toISOString().split('T')[0];
+                const hojeStr = `${agora.getFullYear()}-${agora.getMonth()}-${agora.getDate()}`;
 
                 // Filtrar os que estão ao vivo ou que são HOJE e têm um dos favoritos
                 const novosJogosAoVivo = todosEventos.filter(e => {
                     const status = e.competitions[0].status.type.state;
-                    const dateStr = new Date(e.date).toISOString().split('T')[0];
+                    const d = new Date(e.date);
+                    const dateStr = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
                     
                     if (status !== 'in' && dateStr !== hojeStr) return false;
                     
@@ -3858,8 +3866,11 @@
                         historicoGolsAoVivo[jogoKey] = totalGols;
                     }
 
-                    const oldStatus = historicoStatusAoVivo[jogoKey];
-                    if (oldStatus === 'in' && (status === 'post' || comp.status.type.completed)) {
+                    const isFim = status === 'post' || comp.status.type.completed;
+                    const notificadosKey = `c7-notif-fim-${hojeStr}`;
+                    const notificadosHoje = JSON.parse(getStorage().getItem(notificadosKey) || '{}');
+                    
+                    if (isFim && !notificadosHoje[jogoKey]) {
                         let favIndex = -1;
                         if (timesFavoritos.includes(home.team.id)) { favIndex = 0; }
                         else if (timesFavoritos.includes(away.team.id)) { favIndex = 1; }
@@ -3883,6 +3894,9 @@
                         }
                         mostrarToastAoVivo(msgFim);
                         adicionarNotificacao(msgFim, 'sport');
+                        
+                        notificadosHoje[jogoKey] = true;
+                        getStorage().setItem(notificadosKey, JSON.stringify(notificadosHoje));
                     }
                     historicoStatusAoVivo[jogoKey] = status;
                 });
@@ -3952,7 +3966,7 @@
                 centerMiddleHtml = `<div class="live-score" style="color: #aaa; font-size: 1.2rem;">VS</div>`;
                 centerBottomHtml = `<div class="live-time" style="color: #ccc; margin-top: 4px; text-align: center;"><i class="far fa-clock" style="font-size:10px;margin-right:4px;"></i>${dataFormatada} - ${horario}</div>`;
             } else if (state === 'post') {
-                centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Fim de Jogo</div>`;
+                centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #ffcc00; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Fim de Jogo</div>`;
                 centerMiddleHtml = `<div class="live-score" style="color: #ffffff;">${home.score} - ${away.score}</div>`;
                 centerBottomHtml = ``;
             }
