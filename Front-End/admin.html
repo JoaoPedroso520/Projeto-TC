@@ -1458,21 +1458,47 @@
             }
         }
 
+        function comprimirImagem(file, maxSize, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = Math.round(height * (maxSize / width));
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = Math.round(width * (maxSize / height));
+                            height = maxSize;
+                        }
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function previewFotoNoticia(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.size >= 5 * 1024 * 1024) {
-                    showNotification('A imagem deve ter menos de 5MB', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('noticia-preview-img').src = e.target.result;
+                comprimirImagem(file, 1200, (dataUrl) => {
+                    document.getElementById('noticia-preview-img').src = dataUrl;
                     document.getElementById('noticia-preview').style.display = 'block';
-                    document.getElementById('noticiaFoto').value = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                    document.getElementById('noticiaFoto').value = dataUrl;
+                });
             }
         }
 
@@ -1628,18 +1654,11 @@
         function previewFotoAnuncio(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.size >= 5 * 1024 * 1024) {
-                    showNotification('A imagem deve ter menos de 5MB', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('anuncio-preview-img').src = e.target.result;
+                comprimirImagem(file, 1200, (dataUrl) => {
+                    document.getElementById('anuncio-preview-img').src = dataUrl;
                     document.getElementById('anuncio-preview').style.display = 'block';
-                    document.getElementById('anuncioFoto').value = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                    document.getElementById('anuncioFoto').value = dataUrl;
+                });
             }
         }
 
