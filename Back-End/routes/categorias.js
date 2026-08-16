@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Categoria = require('../models/Categoria');
+const authMiddleware = require('../middleware/authMiddleware');
 
 function escapeRegex(text) {
   return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
 });
 
 // Criar categoria
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const nome = String(req.body.nome || '').trim();
     if (!nome) {
@@ -49,7 +50,7 @@ router.post('/', async (req, res) => {
 });
 
 // Deletar categoria
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const categoria = await Categoria.findByIdAndDelete(req.params.id);
     if (!categoria) {
@@ -62,7 +63,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Atualizar categoria
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const nome = String(req.body.nome || '').trim();
     if (!nome) {

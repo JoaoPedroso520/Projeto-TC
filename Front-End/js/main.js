@@ -50,8 +50,9 @@ function otimizarImagem(url, largura = 600, qualidade = 65) {
 
     if (!/^https?:\/\//i.test(original)) return original;
 
-    const urlSemProtocolo = original.replace(/^https?:\/\//i, '');
-    return `https://images.weserv.nl/?url=${encodeURIComponent(urlSemProtocolo)}&w=${largura}&q=${qualidade}&output=webp`;
+    // Retornamos a imagem original diretamente. O proxy wsrv.nl foi removido 
+    // porque estava bloqueando links locais (localhost) ou instáveis.
+    return original;
 }
 
 function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarAnuncios();
     setupEventListeners();
     
-    // Auto-Refresh a cada 30 segundos
+    // Auto-Refresh a cada 30 segundos (evita lentidão e travamentos no mobile)
     setInterval(() => {
         if (categoriaAtual) {
             carregarNoticiasPorCategoria(categoriaAtual, true);
@@ -115,7 +116,7 @@ function setupEventListeners() {
 // Carregar todas as notícias
 async function carregarNoticias(isSilencioso = false) {
     try {
-        const response = await fetch(`${API_URL}/noticias`);
+        const response = await fetch(`${API_URL}/noticias?t=${Date.now()}`);
         const noticias = await response.json();
         
         const novoCache = JSON.stringify(noticias);
@@ -134,7 +135,7 @@ async function carregarNoticias(isSilencioso = false) {
 // Carregar notícias por categoria
 async function carregarNoticiasPorCategoria(categoria, isSilencioso = false) {
     try {
-        const response = await fetch(`${API_URL}/noticias/categoria/${categoria}`);
+        const response = await fetch(`${API_URL}/noticias/categoria/${categoria}?t=${Date.now()}`);
         const noticias = await response.json();
         
         const novoCache = JSON.stringify(noticias);

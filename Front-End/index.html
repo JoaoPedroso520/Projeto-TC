@@ -1563,6 +1563,40 @@
             letter-spacing: 1px;
         }
 
+        .live-scoreboard-widget.pre-game {
+            background: linear-gradient(135deg, #001a00 0%, #003300 100%);
+            border: 2px solid #33ff33;
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.3);
+            animation: pulse-border-green 2s infinite;
+        }
+
+        @keyframes pulse-border-green {
+            0% { box-shadow: 0 0 10px rgba(51,255,51,0.2); }
+            50% { box-shadow: 0 0 25px rgba(51,255,51,0.6); }
+            100% { box-shadow: 0 0 10px rgba(51,255,51,0.2); }
+        }
+
+        .live-scoreboard-widget.pre-game h3 {
+            color: #33ff33;
+        }
+
+        .live-scoreboard-widget.post-game {
+            background: linear-gradient(135deg, #1a1500 0%, #332b00 100%);
+            border: 2px solid #ffcc00;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+            animation: pulse-border-yellow 2s infinite;
+        }
+
+        @keyframes pulse-border-yellow {
+            0% { box-shadow: 0 0 10px rgba(255,204,0,0.2); }
+            50% { box-shadow: 0 0 25px rgba(255,204,0,0.6); }
+            100% { box-shadow: 0 0 10px rgba(255,204,0,0.2); }
+        }
+
+        .live-scoreboard-widget.post-game h3 {
+            color: #ffcc00;
+        }
+
         .live-match-container {
             display: flex;
             align-items: center;
@@ -2111,7 +2145,7 @@
                     <div class="menu-categorias" id="menu-categorias"></div>
                     <div class="busca-container">
                         <input type="text" id="buscaInput" placeholder="Buscar notícias..." aria-label="Buscar notícias"
-                            oninput="atualizarBotaoLimparBusca()"
+                            oninput="atualizarBotaoLimparBusca(); liveSearch()"
                             onkeypress="if(event.key==='Enter') fazerBusca()">
                         <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
                             onclick="limparBusca()">
@@ -2181,7 +2215,7 @@
 
             <!-- PLACAR AO VIVO (FAVORITOS) -->
             <div class="live-scoreboard-widget" id="liveScoreboardWidget">
-                <h3><i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos</h3>
+                <h3 id="liveScoreboardTitle"><i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos</h3>
                 <div class="live-match-container" id="liveMatchContainer">
                     <!-- Preenchido via JS -->
                 </div>
@@ -2193,6 +2227,7 @@
                 <div class="esportes-search-bar">
                     <i class="fas fa-search"></i>
                     <input type="text" id="esportesSearchInput" placeholder="Buscar time..." oninput="renderEsportes()">
+                    <i class="fas fa-times" id="clearEsportesSearch" onclick="limparBuscaEsportes()" style="display: none; color: #ff4444; cursor: pointer; margin-left: auto; font-size: 16px;"></i>
                 </div>
                 <div class="esportes-times-grid" id="esportesTimesGrid">
                     <p style="grid-column: 1/-1; text-align: center; padding: 20px; color: #888;"><i class="fas fa-spinner fa-spin"></i> Carregando times...</p>
@@ -2321,7 +2356,8 @@
     </footer>
 
     <script>
-        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
         const anunciosIntervalos = {};
         const CACHE_TTL_MS = 5 * 60 * 1000;
         const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
@@ -2422,7 +2458,8 @@
 
             if (!/^https?:\/\//i.test(original)) return original;
 
-            return original;
+            // Usa um proxy rápido e moderno (wsrv.nl) para otimizar imagens de links externos
+            return `https://wsrv.nl/?url=${encodeURIComponent(original)}&w=${largura}&q=${qualidade}&output=webp`;
         }
 
         function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
@@ -2509,71 +2546,83 @@
             }, tempoMs);
         }
 
-        async function carregarTodas() {
-            console.log('Carregando todas as notícias...');
+        async function carregarTodas(isSilencioso = false) {
+            if (!isSilencioso) console.log('Carregando todas as notícias...');
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}todas`;
             const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
             let exibiuCache = false;
-            if (noticiasCache) {
+            if (noticiasCache && !isSilencioso) {
                 setFiltroAtivo('');
                 exibir(noticiasCache);
                 exibiuCache = true;
             }
 
             try {
-                setFiltroAtivo('');
+                if (!isSilencioso) setFiltroAtivo('');
                 // Evitar cache do navegador para mostrar notícias recém-criadas na hora
                 const res = await fetch(`${API_URL}/noticias?t=${Date.now()}`, { cache: 'no-store' });
-                console.log('Response status:', res.status);
+                if (!isSilencioso) console.log('Response status:', res.status);
 
                 if (!res.ok) {
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
 
                 const noticias = await res.json();
+                
+                // Só atualiza a tela se tiver mudado para não piscar a interface
+                if (isSilencioso && JSON.stringify(noticiasCache) === JSON.stringify(noticias)) {
+                    return;
+                }
+                
                 setCache(cacheKey, noticias);
-                console.log('Notícias recebidas:', noticias.length);
+                if (!isSilencioso) console.log('Notícias recebidas:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.warn('Erro ao carregar:', e);
-                if (!exibiuCache) {
+                if (!isSilencioso) console.warn('Erro ao carregar:', e);
+                if (!exibiuCache && !isSilencioso) {
                     document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;"><i class="fas fa-exclamation-triangle"></i> Erro ao conectar com o servidor<br><small>Tente novamente em instantes.</small></p>';
                 }
             }
         }
 
-        async function carregarPorCategoria(cat) {
-            console.log('Carregando categoria:', cat);
+        async function carregarPorCategoria(cat, isSilencioso = false) {
+            if (!isSilencioso) console.log('Carregando categoria:', cat);
             const cacheKey = `${NOTICIAS_CACHE_PREFIX}categoria:${cat}`;
             const noticiasCache = getCache(cacheKey) || getStaleCache(cacheKey);
             let exibiuCache = false;
-            if (noticiasCache) {
+            if (noticiasCache && !isSilencioso) {
                 setFiltroAtivo(cat);
                 exibir(noticiasCache);
                 exibiuCache = true;
             }
 
             try {
-                setFiltroAtivo(cat);
+                if (!isSilencioso) setFiltroAtivo(cat);
                 // Evitar cache do navegador
                 const url = `${API_URL}/noticias/categoria/${encodeURIComponent(cat)}?t=${Date.now()}`;
-                console.log('URL:', url);
+                if (!isSilencioso) console.log('URL:', url);
                 const res = await fetch(url, { cache: 'no-store' });
-                console.log('Response status:', res.status);
+                if (!isSilencioso) console.log('Response status:', res.status);
 
                 if (!res.ok) {
                     const erro = await res.text();
-                    console.warn('Erro do servidor:', erro);
+                    if (!isSilencioso) console.warn('Erro do servidor:', erro);
                     throw new Error(`HTTP erro! status: ${res.status}`);
                 }
                 const noticias = await res.json();
+                
+                // Só atualiza a tela se tiver mudado
+                if (isSilencioso && JSON.stringify(noticiasCache) === JSON.stringify(noticias)) {
+                    return;
+                }
+                
                 setCache(cacheKey, noticias);
-                console.log('Notícias da categoria:', noticias.length);
+                if (!isSilencioso) console.log('Notícias da categoria:', noticias.length);
                 exibir(noticias);
             } catch (e) {
-                console.warn('Erro ao carregar categoria:', e);
-                if (!exibiuCache) {
+                if (!isSilencioso) console.warn('Erro ao carregar categoria:', e);
+                if (!exibiuCache && !isSilencioso) {
                     document.getElementById('noticias-container').classList.remove('is-loading');
                     document.getElementById('noticias-container').innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar categoria<br><small>Verifique o console (F12)</small></p>';
                 }
@@ -2881,7 +2930,10 @@
             }
         }
 
+        window.categoriaAtualLoop = '';
+
         function setFiltroAtivo(categoria) {
+            window.categoriaAtualLoop = categoria || '';
             const alvo = normalizarTexto(categoria || '');
 
             const botoes = document.querySelectorAll('#filtrosNoticias .filtro-btn');
@@ -2943,7 +2995,15 @@
         }
 
         // BUSCA
-        async function fazerBusca() {
+        let searchTimeout;
+        function liveSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fazerBusca(true);
+            }, 400); // 400ms de delay (debounce)
+        }
+
+        async function fazerBusca(isLive = false) {
             const termo = document.getElementById('buscaInput').value.trim();
             if (!termo) {
                 carregarTodas();
@@ -2963,9 +3023,11 @@
                 const noticias = await res.json();
                 setCache(cacheKey, noticias);
                 exibir(noticias);
-                document.getElementById('buscaInput').value = '';
+                
                 atualizarBotaoLimparBusca();
-                fecharMenuMobile();
+                if (!isLive) {
+                    fecharMenuMobile();
+                }
             } catch (e) {
                 console.warn('Erro na busca:', e);
             }
@@ -3301,6 +3363,7 @@
             
             unreadCount++;
             salvarNotificacoes();
+            atualizarBadgeNotificacoes();
         }
 
         function atualizarBadgeNotificacoes() {
@@ -3382,66 +3445,66 @@
         });
 
 
-        // ESPORTES - Todos os times do futebol brasileiro (Série A + B) via ESPN
+        // ESPORTES - Todos os times do futebol brasileiro (Série A + B) do site ESPN
         const timesBrasileiros = [
-            { id: '624', nome: 'Algeria', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/alg.png', tipo: 'World Cup' },
+            { id: '624', nome: 'Argélia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/alg.png', tipo: 'World Cup' },
             { id: '202', nome: 'Argentina', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/arg.png', tipo: 'World Cup' },
-            { id: '628', nome: 'Australia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/aus.png', tipo: 'World Cup' },
-            { id: '474', nome: 'Austria', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/aut.png', tipo: 'World Cup' },
-            { id: '459', nome: 'Belgium', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/bel.png', tipo: 'World Cup' },
+            { id: '628', nome: 'Austrália', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/aus.png', tipo: 'World Cup' },
+            { id: '474', nome: 'Áustria', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/aut.png', tipo: 'World Cup' },
+            { id: '459', nome: 'Bélgica', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/bel.png', tipo: 'World Cup' },
             { id: '452', nome: 'Bosnia-Herzegovina', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/bih.png', tipo: 'World Cup' },
-            { id: '205', nome: 'Brazil', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/bra.png', tipo: 'World Cup' },
-            { id: '206', nome: 'Canada', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/can.png', tipo: 'World Cup' },
-            { id: '2597', nome: 'Cape Verde', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cpv.png', tipo: 'World Cup' },
-            { id: '208', nome: 'Colombia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/col.png', tipo: 'World Cup' },
-            { id: '2850', nome: 'Congo DR', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/rdc.png', tipo: 'World Cup' },
-            { id: '477', nome: 'Croatia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cro.png', tipo: 'World Cup' },
+            { id: '205', nome: 'Brasil', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/bra.png', tipo: 'World Cup' },
+            { id: '206', nome: 'Canadá', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/can.png', tipo: 'World Cup' },
+            { id: '2597', nome: 'Cabo Verde', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cpv.png', tipo: 'World Cup' },
+            { id: '208', nome: 'Colômbia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/col.png', tipo: 'World Cup' },
+            { id: '2850', nome: 'RD Congo', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/rdc.png', tipo: 'World Cup' },
+            { id: '477', nome: 'Croácia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cro.png', tipo: 'World Cup' },
             { id: '11678', nome: 'Curaçao', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11678.png', tipo: 'World Cup' },
-            { id: '450', nome: 'Czechia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cze.png', tipo: 'World Cup' },
-            { id: '209', nome: 'Ecuador', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ecu.png', tipo: 'World Cup' },
-            { id: '2620', nome: 'Egypt', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/egy.png', tipo: 'World Cup' },
-            { id: '448', nome: 'England', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/eng.png', tipo: 'World Cup' },
-            { id: '478', nome: 'France', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/fra.png', tipo: 'World Cup' },
-            { id: '481', nome: 'Germany', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ger.png', tipo: 'World Cup' },
-            { id: '4469', nome: 'Ghana', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/gha.png', tipo: 'World Cup' },
+            { id: '450', nome: 'Tchéquia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/cze.png', tipo: 'World Cup' },
+            { id: '209', nome: 'Equador', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ecu.png', tipo: 'World Cup' },
+            { id: '2620', nome: 'Egito', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/egy.png', tipo: 'World Cup' },
+            { id: '448', nome: 'Inglaterra', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/eng.png', tipo: 'World Cup' },
+            { id: '478', nome: 'França', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/fra.png', tipo: 'World Cup' },
+            { id: '481', nome: 'Alemanha', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ger.png', tipo: 'World Cup' },
+            { id: '4469', nome: 'Gana', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/gha.png', tipo: 'World Cup' },
             { id: '2654', nome: 'Haiti', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/hai.png', tipo: 'World Cup' },
-            { id: '469', nome: 'Iran', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/irn.png', tipo: 'World Cup' },
-            { id: '4375', nome: 'Iraq', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/irq.png', tipo: 'World Cup' },
-            { id: '4789', nome: 'Ivory Coast', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/civ.png', tipo: 'World Cup' },
-            { id: '627', nome: 'Japan', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/jpn.png', tipo: 'World Cup' },
-            { id: '2917', nome: 'Jordan', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/jor.png', tipo: 'World Cup' },
-            { id: '203', nome: 'Mexico', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/mex.png', tipo: 'World Cup' },
-            { id: '2869', nome: 'Morocco', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/mar.png', tipo: 'World Cup' },
-            { id: '449', nome: 'Netherlands', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ned.png', tipo: 'World Cup' },
-            { id: '2666', nome: 'New Zealand', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/nzl.png', tipo: 'World Cup' },
-            { id: '464', nome: 'Norway', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/nor.png', tipo: 'World Cup' },
-            { id: '2659', nome: 'Panama', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/pan.png', tipo: 'World Cup' },
-            { id: '210', nome: 'Paraguay', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/par.png', tipo: 'World Cup' },
+            { id: '469', nome: 'Irã', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/irn.png', tipo: 'World Cup' },
+            { id: '4375', nome: 'Iraque', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/irq.png', tipo: 'World Cup' },
+            { id: '4789', nome: 'Costa do Marfim', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/civ.png', tipo: 'World Cup' },
+            { id: '627', nome: 'Japão', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/jpn.png', tipo: 'World Cup' },
+            { id: '2917', nome: 'Jordânia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/jor.png', tipo: 'World Cup' },
+            { id: '203', nome: 'México', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/mex.png', tipo: 'World Cup' },
+            { id: '2869', nome: 'Marrocos', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/mar.png', tipo: 'World Cup' },
+            { id: '449', nome: 'Holanda', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ned.png', tipo: 'World Cup' },
+            { id: '2666', nome: 'Nova Zelândia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/nzl.png', tipo: 'World Cup' },
+            { id: '464', nome: 'Noruega', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/nor.png', tipo: 'World Cup' },
+            { id: '2659', nome: 'Panamá', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/pan.png', tipo: 'World Cup' },
+            { id: '210', nome: 'Paraguai', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/par.png', tipo: 'World Cup' },
             { id: '482', nome: 'Portugal', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/por.png', tipo: 'World Cup' },
-            { id: '4398', nome: 'Qatar', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/qat.png', tipo: 'World Cup' },
-            { id: '655', nome: 'Saudi Arabia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ksa.png', tipo: 'World Cup' },
-            { id: '580', nome: 'Scotland', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/sco.png', tipo: 'World Cup' },
+            { id: '4398', nome: 'Catar', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/qat.png', tipo: 'World Cup' },
+            { id: '655', nome: 'Arábia Saudita', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/ksa.png', tipo: 'World Cup' },
+            { id: '580', nome: 'Escócia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/sco.png', tipo: 'World Cup' },
             { id: '654', nome: 'Senegal', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/sen.png', tipo: 'World Cup' },
-            { id: '467', nome: 'South Africa', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/rsa.png', tipo: 'World Cup' },
-            { id: '451', nome: 'South Korea', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/kors.png', tipo: 'World Cup' },
-            { id: '164', nome: 'Spain', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/esp.png', tipo: 'World Cup' },
-            { id: '466', nome: 'Sweden', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/swe.png', tipo: 'World Cup' },
-            { id: '475', nome: 'Switzerland', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/sui.png', tipo: 'World Cup' },
-            { id: '659', nome: 'Tunisia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/tun.png', tipo: 'World Cup' },
-            { id: '465', nome: 'Türkiye', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/tur.png', tipo: 'World Cup' },
-            { id: '660', nome: 'United States', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/usa.png', tipo: 'World Cup' },
-            { id: '212', nome: 'Uruguay', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/uru.png', tipo: 'World Cup' },
-            { id: '2570', nome: 'Uzbekistan', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/uzb.png', tipo: 'World Cup' },
+            { id: '467', nome: 'África do Sul', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/rsa.png', tipo: 'World Cup' },
+            { id: '451', nome: 'Coreia do Sul', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/kors.png', tipo: 'World Cup' },
+            { id: '164', nome: 'Espanha', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/esp.png', tipo: 'World Cup' },
+            { id: '466', nome: 'Suécia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/swe.png', tipo: 'World Cup' },
+            { id: '475', nome: 'Suíça', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/sui.png', tipo: 'World Cup' },
+            { id: '659', nome: 'Tunísia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/tun.png', tipo: 'World Cup' },
+            { id: '465', nome: 'Turquia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/tur.png', tipo: 'World Cup' },
+            { id: '660', nome: 'Estados Unidos', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/usa.png', tipo: 'World Cup' },
+            { id: '212', nome: 'Uruguai', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/uru.png', tipo: 'World Cup' },
+            { id: '2570', nome: 'Uzbequistão', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/uzb.png', tipo: 'World Cup' },
             { id: '6418', nome: '1. FC Heidenheim 1846', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/6418.png', tipo: 'Bundesliga' },
             { id: '598', nome: '1. FC Union Berlin', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/598.png', tipo: 'Bundesliga' },
             { id: '131', nome: 'Bayer Leverkusen', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png', tipo: 'Bundesliga' },
-            { id: '132', nome: 'Bayern Munich', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png', tipo: 'Bundesliga' },
+            { id: '132', nome: 'Bayern de Munique', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png', tipo: 'Bundesliga' },
             { id: '124', nome: 'Borussia Dortmund', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png', tipo: 'Bundesliga' },
             { id: '268', nome: 'Borussia Mönchengladbach', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/268.png', tipo: 'Bundesliga' },
             { id: '125', nome: 'Eintracht Frankfurt', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/125.png', tipo: 'Bundesliga' },
             { id: '3841', nome: 'FC Augsburg', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/3841.png', tipo: 'Bundesliga' },
-            { id: '122', nome: 'FC Cologne', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/122.png', tipo: 'Bundesliga' },
-            { id: '127', nome: 'Hamburg SV', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/127.png', tipo: 'Bundesliga' },
+            { id: '122', nome: 'FC Colônia', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/122.png', tipo: 'Bundesliga' },
+            { id: '127', nome: 'Hamburgo', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/127.png', tipo: 'Bundesliga' },
             { id: '2950', nome: 'Mainz', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2950.png', tipo: 'Bundesliga' },
             { id: '11420', nome: 'RB Leipzig', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11420.png', tipo: 'Bundesliga' },
             { id: '126', nome: 'SC Freiburg', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/126.png', tipo: 'Bundesliga' },
@@ -3451,7 +3514,7 @@
             { id: '138', nome: 'VfL Wolfsburg', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/138.png', tipo: 'Bundesliga' },
             { id: '137', nome: 'Werder Bremen', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/137.png', tipo: 'Bundesliga' },
             { id: '174', nome: 'AS Monaco', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png', tipo: 'Champions' },
-            { id: '139', nome: 'Ajax Amsterdam', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/139.png', tipo: 'Champions' },
+            { id: '139', nome: 'Ajax', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/139.png', tipo: 'Champions' },
             { id: '359', nome: 'Arsenal', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png', tipo: 'Champions' },
             { id: '105', nome: 'Atalanta', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/105.png', tipo: 'Champions' },
             { id: '93', nome: 'Athletic Club', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/93.png', tipo: 'Champions' },
@@ -3461,15 +3524,15 @@
             { id: '2980', nome: 'Bodo/Glimt', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2980.png', tipo: 'Champions' },
             { id: '363', nome: 'Chelsea', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png', tipo: 'Champions' },
             { id: '570', nome: 'Club Brugge', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/570.png', tipo: 'Champions' },
-            { id: '909', nome: 'F.C. København', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/909.png', tipo: 'Champions' },
-            { id: '10414', nome: 'FK Qarabag', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/10414.png', tipo: 'Champions' },
+            { id: '909', nome: 'Copenhague', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/909.png', tipo: 'Champions' },
+            { id: '10414', nome: 'Qarabag', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/10414.png', tipo: 'Champions' },
             { id: '432', nome: 'Galatasaray', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/432.png', tipo: 'Champions' },
-            { id: '110', nome: 'Internazionale', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png', tipo: 'Champions' },
+            { id: '110', nome: 'Inter de Milão', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png', tipo: 'Champions' },
             { id: '111', nome: 'Juventus', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png', tipo: 'Champions' },
             { id: '2528', nome: 'Kairat Almaty', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2528.png', tipo: 'Champions' },
             { id: '364', nome: 'Liverpool', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/364.png', tipo: 'Champions' },
             { id: '382', nome: 'Manchester City', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png', tipo: 'Champions' },
-            { id: '176', nome: 'Marseille', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/176.png', tipo: 'Champions' },
+            { id: '176', nome: 'Olympique de Marselha', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/176.png', tipo: 'Champions' },
             { id: '114', nome: 'Napoli', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/114.png', tipo: 'Champions' },
             { id: '361', nome: 'Newcastle United', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png', tipo: 'Champions' },
             { id: '435', nome: 'Olympiacos', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/435.png', tipo: 'Champions' },
@@ -3477,13 +3540,13 @@
             { id: '22281', nome: 'Pafos', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/22281.png', tipo: 'Champions' },
             { id: '160', nome: 'Paris Saint-Germain', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png', tipo: 'Champions' },
             { id: '86', nome: 'Real Madrid', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png', tipo: 'Champions' },
-            { id: '494', nome: 'Slavia Prague', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/494.png', tipo: 'Champions' },
-            { id: '2250', nome: 'Sporting CP', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2250.png', tipo: 'Champions' },
+            { id: '494', nome: 'Slavia Praga', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/494.png', tipo: 'Champions' },
+            { id: '2250', nome: 'Sporting', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2250.png', tipo: 'Champions' },
             { id: '367', nome: 'Tottenham Hotspur', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png', tipo: 'Champions' },
             { id: '5807', nome: 'Union St.-Gilloise', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/5807.png', tipo: 'Champions' },
             { id: '102', nome: 'Villarreal', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/102.png', tipo: 'Champions' },
-            { id: '103', nome: 'AC Milan', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png', tipo: 'Serie A Italy' },
-            { id: '104', nome: 'AS Roma', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png', tipo: 'Serie A Italy' },
+            { id: '103', nome: 'Milan', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png', tipo: 'Serie A Italy' },
+            { id: '104', nome: 'Roma', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png', tipo: 'Serie A Italy' },
             { id: '107', nome: 'Bologna', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/107.png', tipo: 'Serie A Italy' },
             { id: '2925', nome: 'Cagliari', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2925.png', tipo: 'Serie A Italy' },
             { id: '2572', nome: 'Como', escudo: 'https://a.espncdn.com/i/teamlogos/soccer/500/2572.png', tipo: 'Serie A Italy' },
@@ -3610,6 +3673,13 @@
                     adicionarNotificacao(`Você favoritou o ${time.nome}. Receberá notificações sobre resultados.`, 'sport');
                 }
             }
+            // Limpa o cache de notificações deste time específico para que a notificação reapareça apenas para ele
+            const agoraFav = new Date();
+            const hojeDataStrFav = `${agoraFav.getFullYear()}-${agoraFav.getMonth()}-${agoraFav.getDate()}`;
+            const key = `c7-notif-fim-${hojeDataStrFav}`;
+            const notifs = JSON.parse(getStorage().getItem(key) || '{}');
+            delete notifs[id];
+            getStorage().setItem(key, JSON.stringify(notifs));
             salvarFavoritos();
             renderEsportes();
             if (timeModalAtual && timeModalAtual.id === id) {
@@ -3638,13 +3708,26 @@
             }
         }
 
+        function limparBuscaEsportes() {
+            const searchInput = document.getElementById('esportesSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                renderEsportes();
+            }
+        }
+
         function renderEsportes() {
             const grid = document.getElementById('esportesTimesGrid');
             const verMaisDiv = document.getElementById('esportesVerMais');
             if (!grid) return;
 
             const searchInput = document.getElementById('esportesSearchInput');
+            const clearBtn = document.getElementById('clearEsportesSearch');
             const busca = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            if (clearBtn) {
+                clearBtn.style.display = busca ? 'block' : 'none';
+            }
 
             // Filtrar pela busca
             let timesFiltrados = timesBrasileiros;
@@ -3767,8 +3850,8 @@
                     }
                 });
 
-                const endpoints = Array.from(ligasParaBuscar).map(liga => `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard`);
-                if (endpoints.length === 0) endpoints.push('https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard');
+                const endpoints = Array.from(ligasParaBuscar).map(liga => `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard?lang=pt&region=br`);
+                if (endpoints.length === 0) endpoints.push('https://site.api.espn.com/apis/site/v2/sports/soccer/bra.1/scoreboard?lang=pt&region=br');
                 
                 let todosEventos = [];
                 for(let ep of endpoints) {
@@ -3780,12 +3863,13 @@
                 }
 
                 const agora = new Date();
-                const hojeStr = agora.toISOString().split('T')[0];
+                const hojeStr = `${agora.getFullYear()}-${agora.getMonth()}-${agora.getDate()}`;
 
                 // Filtrar os que estão ao vivo ou que são HOJE e têm um dos favoritos
                 const novosJogosAoVivo = todosEventos.filter(e => {
                     const status = e.competitions[0].status.type.state;
-                    const dateStr = new Date(e.date).toISOString().split('T')[0];
+                    const d = new Date(e.date);
+                    const dateStr = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
                     
                     if (status !== 'in' && dateStr !== hojeStr) return false;
                     
@@ -3816,16 +3900,46 @@
                         historicoGolsAoVivo[jogoKey] = totalGols;
                     }
 
-                    const oldStatus = historicoStatusAoVivo[jogoKey];
-                    if (oldStatus === 'in' && (status === 'post' || comp.status.type.completed)) {
-                        let msgFim = `FIM DE JOGO: ${home.team.displayName} ${golsHome} x ${golsAway} ${away.team.displayName}`;
-                        mostrarToastAoVivo(msgFim);
-                        adicionarNotificacao(msgFim, 'sport');
+                    const isFim = status === 'post' || comp.status.type.completed;
+                    const notificadosKey = `c7-notif-fim-${hojeStr}`;
+                    const notificadosHoje = JSON.parse(getStorage().getItem(notificadosKey) || '{}');
+                    
+                    if (isFim) {
+                        const favTeamsInMatch = [];
+                        if (timesFavoritos.includes(home.team.id)) favTeamsInMatch.push({ id: home.team.id, isHome: true });
+                        if (timesFavoritos.includes(away.team.id)) favTeamsInMatch.push({ id: away.team.id, isHome: false });
+                        
+                        favTeamsInMatch.forEach(fav => {
+                            if (!notificadosHoje[fav.id]) {
+                                const myTeam = fav.isHome ? home : away;
+                                const otherTeam = fav.isHome ? away : home;
+                                const myScore = parseInt(myTeam.score) || 0;
+                                const otherScore = parseInt(otherTeam.score) || 0;
+                                let msgFim = '';
+                                
+                                if (myScore > otherScore) {
+                                    msgFim = `VENCEDOR!! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                } else if (myScore === otherScore) {
+                                    msgFim = `EMPATE! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                } else {
+                                    msgFim = `NÃO FOI DESSA VEZ! Placar ${myTeam.team.displayName} ${myScore}x${otherScore} ${otherTeam.team.displayName}`;
+                                }
+                                
+                                mostrarToastAoVivo(msgFim);
+                                adicionarNotificacao(msgFim, 'sport');
+                                
+                                notificadosHoje[fav.id] = true;
+                                getStorage().setItem(notificadosKey, JSON.stringify(notificadosHoje));
+                            }
+                        });
                     }
                     historicoStatusAoVivo[jogoKey] = status;
                 });
 
-                jogosAoVivoFavoritos = novosJogosAoVivo.filter(j => j.competitions[0].status.type.state === 'in');
+                jogosAoVivoFavoritos = novosJogosAoVivo.filter(j => {
+                    const st = j.competitions[0].status.type.state;
+                    return st === 'in' || st === 'pre' || st === 'post';
+                });
 
                 // Renderizar
                 renderLiveScoreboard();
@@ -3861,16 +3975,35 @@
             let centerMiddleHtml = '';
             let centerBottomHtml = '';
             
+            const titleEl = document.getElementById('liveScoreboardTitle');
+            if (titleEl) {
+                widget.classList.remove('pre-game', 'post-game');
+                if (state === 'pre') {
+                    titleEl.innerHTML = '<i class="far fa-calendar-alt"></i> Hoje - Seus Favoritos';
+                    widget.classList.add('pre-game');
+                } else if (state === 'post') {
+                    titleEl.innerHTML = '<i class="fas fa-check-circle"></i> Encerrado - Seus Favoritos';
+                    widget.classList.add('post-game');
+                } else {
+                    titleEl.innerHTML = '<i class="fas fa-broadcast-tower fa-beat"></i> Ao Vivo - Seus Favoritos';
+                }
+            }
+            
             if (state === 'in') {
                 const tempo = comp.status.displayClock + "' " + (comp.status.period === 1 ? '1ºT' : (comp.status.period === 2 ? '2ºT' : 'Int'));
                 centerMiddleHtml = `<div class="live-score">${home.score} - ${away.score}</div>`;
                 centerBottomHtml = `<div class="live-time"><i class="fas fa-circle fa-beat" style="font-size:8px;margin-right:4px;"></i>${tempo}</div>`;
             } else if (state === 'pre') {
                 const dataJogo = new Date(jogo.date);
+                const dataFormatada = dataJogo.toLocaleDateString('pt-BR');
                 const horario = dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #ffeb3b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Hoje</div>`;
-                centerMiddleHtml = `<div class="live-score" style="color: #aaa; font-size: 1.2rem;">X</div>`;
-                centerBottomHtml = `<div class="live-time" style="color: #ccc; margin-top: 4px;"><i class="far fa-clock" style="font-size:10px;margin-right:4px;"></i>${horario}</div>`;
+                centerMiddleHtml = `<div class="live-score" style="color: #aaa; font-size: 1.2rem;">VS</div>`;
+                centerBottomHtml = `<div class="live-time" style="color: #ccc; margin-top: 4px; text-align: center;"><i class="far fa-clock" style="font-size:10px;margin-right:4px;"></i>${dataFormatada} - ${horario}</div>`;
+            } else if (state === 'post') {
+                centerTopHtml = `<div style="font-size: 11px; font-weight: bold; color: #ffcc00; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Fim de Jogo</div>`;
+                centerMiddleHtml = `<div class="live-score" style="color: #ffffff;">${home.score} - ${away.score}</div>`;
+                centerBottomHtml = ``;
             }
 
             container.innerHTML = `
@@ -3917,12 +4050,45 @@
 
             try {
                 // Endpoint 'all' para pegar TODAS as competições do time (Brasileirão, Copa do Brasil, Libertadores, etc.)
-                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${timeModalAtual.id}/schedule`;
+                const endpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${timeModalAtual.id}/schedule?lang=pt&region=br`;
                 const response = await fetch(endpoint);
                 const data = await response.json();
                 
                 let events = data.events || [];
                 const agora = new Date();
+
+                // Fallback para 'ultimos': a API schedule às vezes demora para incluir o jogo de hoje que acabou de terminar
+                if (tabAtual === 'ultimos') {
+                    const ligaMap = {
+                        'Serie A': 'bra.1', 'Serie B': 'bra.2', 'Libertadores': 'conmebol.libertadores',
+                        'Premier League': 'eng.1', 'La Liga': 'esp.1', 'Serie A Italy': 'ita.1',
+                        'Bundesliga': 'ger.1', 'Ligue 1': 'fra.1', 'Champions': 'uefa.champions',
+                        'World Cup': 'fifa.world', 'Seleção': 'fifa.world'
+                    };
+                    const liga = ligaMap[timeModalAtual.tipo] || 'all';
+                    
+                    const dOntem = new Date(agora);
+                    dOntem.setDate(dOntem.getDate() - 2); // busca últimos 2 dias para garantir
+                    const d1 = dOntem.toISOString().split('T')[0].replace(/-/g, '');
+                    const d2 = agora.toISOString().split('T')[0].replace(/-/g, '');
+                    
+                    try {
+                        const sbEndpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard?lang=pt&region=br&dates=${d1}-${d2}&limit=100`;
+                        const sbRes = await fetch(sbEndpoint);
+                        const sbData = await sbRes.json();
+                        if (sbData.events) {
+                            const jogosDoTime = sbData.events.filter(e => {
+                                return e.competitions && e.competitions[0] && e.competitions[0].competitors.some(c => c.team.id === timeModalAtual.id);
+                            });
+                            const idsExistentes = new Set(events.map(e => e.id));
+                            jogosDoTime.forEach(j => {
+                                if (!idsExistentes.has(j.id)) events.push(j);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Erro ao carregar fallback de ultimos', e);
+                    }
+                }
 
                 // Se for a aba 'proximos' e a API não retornou jogos futuros, busca do scoreboard da liga
                 if (tabAtual === 'proximos') {
@@ -3942,7 +4108,7 @@
                         const d2 = dataFutura.toISOString().split('T')[0].replace(/-/g, '');
                         
                         try {
-                            const sbEndpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard?dates=${d1}-${d2}&limit=300`;
+                            const sbEndpoint = `https://site.api.espn.com/apis/site/v2/sports/soccer/${liga}/scoreboard?lang=pt&region=br&dates=${d1}-${d2}&limit=300`;
                             const sbRes = await fetch(sbEndpoint);
                             const sbData = await sbRes.json();
                             if (sbData.events) {
@@ -4010,10 +4176,13 @@
                     const formatada = dataJogo.toLocaleDateString('pt-BR') + ' ' + dataJogo.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
                     let placar = 'vs';
-                    if (comp.status.type.completed && homeTeam.score && awayTeam.score) {
-                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue;
-                    } else if (comp.status.type.state === 'in') {
-                        placar = homeTeam.score.displayValue + ' - ' + awayTeam.score.displayValue + ' (Ao vivo)';
+                    let hScore = homeTeam.score !== undefined ? (typeof homeTeam.score === 'object' ? homeTeam.score.displayValue : homeTeam.score) : null;
+                    let aScore = awayTeam.score !== undefined ? (typeof awayTeam.score === 'object' ? awayTeam.score.displayValue : awayTeam.score) : null;
+                    
+                    if (comp.status.type.completed && hScore !== null && aScore !== null) {
+                        placar = hScore + ' - ' + aScore;
+                    } else if (comp.status.type.state === 'in' && hScore !== null && aScore !== null) {
+                        placar = hScore + ' - ' + aScore + ' (Ao vivo)';
                     }
 
                     const campeonato = jogo.seasonType && jogo.seasonType.name ? jogo.seasonType.name.replace('2026 Brasileiro ', '').replace('2026 ', '') : 'Campeonato';
@@ -4069,7 +4238,12 @@
         if (originalExibir) {
             exibir = function(noticias) {
                 originalExibir(noticias);
-                if (noticias && noticias.length > 0) {
+
+                const buscaInput = document.getElementById('buscaInput');
+                const isBusca = buscaInput && buscaInput.value.trim() !== '';
+                const isCategoria = window.categoriaAtualLoop && window.categoriaAtualLoop !== '';
+
+                if (noticias && noticias.length > 0 && !isBusca && !isCategoria) {
                     // Simular notificação da notícia mais recente se ela for nova (baseado na data)
                     const maisRecente = noticias[0];
                     const chaveVisto = 'c7-last-news-seen';
@@ -4100,6 +4274,18 @@
             carregarSecundarios();
             
             setInterval(checarResultadosFavoritos, 60 * 1000 * 10); // A cada 10 min
+            
+            // Loop de atualização silenciosa para mostrar novas notícias instantaneamente
+            setInterval(() => {
+                const searchInput = document.getElementById('buscaInput');
+                if (!searchInput || searchInput.value.trim() === '') {
+                    if (window.categoriaAtualLoop) {
+                        carregarPorCategoria(window.categoriaAtualLoop, true);
+                    } else {
+                        carregarTodas(true);
+                    }
+                }
+            }, 5000); // 5 segundos
         });
     </script>
 </body>

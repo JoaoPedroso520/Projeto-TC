@@ -904,7 +904,7 @@
                             <img id="noticia-preview-img"
                                 style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #00cc00;">
                         </div>
-                        <input type="url" id="noticiaFoto" placeholder="Ou insira URL da imagem">
+                        <input type="text" id="noticiaFoto" placeholder="Ou insira URL ou caminho da imagem local">
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-align-left"></i> Conteúdo *</label>
@@ -974,11 +974,11 @@
                             <img id="anuncio-preview-img"
                                 style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid #00cc00;">
                         </div>
-                        <input type="url" id="anuncioFoto" placeholder="Ou insira URL da imagem">
+                        <input type="text" id="anuncioFoto" placeholder="Ou insira URL ou caminho da imagem local">
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-link"></i> Link/URL</label>
-                        <input type="url" id="anuncioLink" placeholder="https://exemplo.com">
+                        <input type="text" id="anuncioLink" placeholder="https://exemplo.com ou link interno">
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-stopwatch"></i> Tempo de rotação (segundos)</label>
@@ -1119,7 +1119,26 @@
 
     <script>
         // API Local forçada removida - sempre aponta para produção para evitar confusão de banco
-        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
+
+        async function fetchAuth(url, options = {}) {
+            const tokenData = localStorage.getItem('adminToken');
+            const token = tokenData ? JSON.parse(tokenData).token : '';
+            if (!options.headers) options.headers = {};
+            // Só adiciona se não for um FormData (o browser cuida do Content-Type no FormData)
+            if (!(options.body instanceof FormData) && !options.headers['Content-Type']) {
+                options.headers['Content-Type'] = 'application/json';
+            }
+            options.headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(url, options);
+            if (res.status === 401 || res.status === 403) {
+                deslogar(true);
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+            return res;
+        }
+
         let confirmCallback = null;
         let usuarioAutenticado = null;
 
@@ -1384,7 +1403,7 @@
         async function carregarNoticias() {
             try {
                 // Puxar do novo endpoint admin que traz todas sem restrição
-                const res = await fetch(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
                 const noticias = await res.json();
                 
                 const notStr = JSON.stringify(noticias);
@@ -1458,21 +1477,47 @@
             }
         }
 
+        function comprimirImagem(file, maxSize, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = Math.round(height * (maxSize / width));
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = Math.round(width * (maxSize / height));
+                            height = maxSize;
+                        }
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function previewFotoNoticia(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.size >= 5 * 1024 * 1024) {
-                    showNotification('A imagem deve ter menos de 5MB', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('noticia-preview-img').src = e.target.result;
+                comprimirImagem(file, 1200, (dataUrl) => {
+                    document.getElementById('noticia-preview-img').src = dataUrl;
                     document.getElementById('noticia-preview').style.display = 'block';
-                    document.getElementById('noticiaFoto').value = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                    document.getElementById('noticiaFoto').value = dataUrl;
+                });
             }
         }
 
@@ -1499,7 +1544,7 @@
             }
 
             try {
-                const res = await fetch(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
+                const res = await fetchAuth(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1527,7 +1572,7 @@
 
         async function deletarNoticia(id) {
             try {
-                const res = await fetch(`${API_URL}/noticias/${id}`, { method: 'DELETE' });
+                const res = await fetchAuth(`${API_URL}/noticias/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     showNotification('Notícia deletada!', 'success');
                     carregarNoticias();
@@ -1542,7 +1587,7 @@
         // ==== ANÚNCIOS ====
         async function carregarAnuncios() {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 
                 const anStr = JSON.stringify(anuncios);
@@ -1603,7 +1648,7 @@
 
         async function editarAnuncio(id) {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 const a = anuncios.find(x => x._id === id);
 
@@ -1628,18 +1673,11 @@
         function previewFotoAnuncio(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.size >= 5 * 1024 * 1024) {
-                    showNotification('A imagem deve ter menos de 5MB', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('anuncio-preview-img').src = e.target.result;
+                comprimirImagem(file, 1200, (dataUrl) => {
+                    document.getElementById('anuncio-preview-img').src = dataUrl;
                     document.getElementById('anuncio-preview').style.display = 'block';
-                    document.getElementById('anuncioFoto').value = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                    document.getElementById('anuncioFoto').value = dataUrl;
+                });
             }
         }
 
@@ -1670,7 +1708,7 @@
             }
 
             try {
-                const res = await fetch(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
+                const res = await fetchAuth(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1698,7 +1736,7 @@
 
         async function deletarAnuncio(id) {
             try {
-                const res = await fetch(`${API_URL}/anuncios/${id}`, { method: 'DELETE' });
+                const res = await fetchAuth(`${API_URL}/anuncios/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     showNotification('Anúncio deletado!', 'success');
                     carregarAnuncios();
@@ -1736,7 +1774,7 @@
             if (!nome) return;
 
             try {
-                const res = await fetch(id ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`, {
+                const res = await fetchAuth(id ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome })
@@ -1758,7 +1796,7 @@
         function deletarCategoria(id, nome) {
             showConfirmation(`Deletar categoria "${nome}"?`, async () => {
                 try {
-                    const res = await fetch(`${API_URL}/categorias/${id}`, { method: 'DELETE' });
+                    const res = await fetchAuth(`${API_URL}/categorias/${id}`, { method: 'DELETE' });
                     if (res.ok) {
                         showNotification('Categoria deletada!', 'success');
                         carregarCategorias();
@@ -1790,7 +1828,7 @@
             if (!nome) return;
 
             try {
-                const res = await fetch(`${API_URL}/categorias`, {
+                const res = await fetchAuth(`${API_URL}/categorias`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome })
@@ -1813,7 +1851,7 @@
         // ==== USUÁRIOS ====
         async function carregarUsuarios() {
             try {
-                const res = await fetch(`${API_URL}/usuarios`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/usuarios`, { cache: 'no-store' });
                 const usuarios = await res.json();
                 const tbody = document.getElementById('usuariosTabela');
 
@@ -1879,7 +1917,7 @@
             };
 
             try {
-                const res = await fetch(id ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`, {
+                const res = await fetchAuth(id ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1904,7 +1942,7 @@
         function deletarUsuario(id, usuario) {
             showConfirmation(`Deletar administrador "${usuario}"?`, async () => {
                 try {
-                    const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+                    const res = await fetchAuth(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
                     const data = await res.json().catch(() => ({}));
                     
                     if (res.ok) {

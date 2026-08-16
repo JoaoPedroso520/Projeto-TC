@@ -19,7 +19,7 @@ function optimizedImageUrl(req, tipo, id, updatedAt, width = 720, quality = 62) 
 }
 
 function withOptimizedImage(req, item, tipo, width = 720, quality = 62) {
-  if (!item || !isDataImage(item.foto)) return item;
+  if (!item || !item.foto) return item;
 
   return {
     ...item,
