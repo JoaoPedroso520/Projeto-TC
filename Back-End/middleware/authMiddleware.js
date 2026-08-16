@@ -13,7 +13,8 @@ module.exports = function(req, res, next) {
     // Verificar token (espera formato "Bearer <token>")
     const tokenFormatado = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
     
-    const decoded = jwt.verify(tokenFormatado, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET || 'c7noticias_super_secreta_jwt_key_12345';
+    const decoded = jwt.verify(tokenFormatado, jwtSecret);
     req.user = decoded.user;
     next();
   } catch (err) {

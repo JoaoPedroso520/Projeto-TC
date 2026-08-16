@@ -32,7 +32,8 @@ router.post('/login', async (req, res) => {
 
     // Criar JWT real
     const payload = { user: { id: user.id } };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '12h' });
+    const jwtSecret = process.env.JWT_SECRET || 'c7noticias_super_secreta_jwt_key_12345';
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: '12h' });
 
     res.json({
       sucesso: true,
@@ -55,7 +56,8 @@ router.post('/verificar', (req, res) => {
     }
 
     try {
-      jwt.verify(token, process.env.JWT_SECRET);
+      const jwtSecret = process.env.JWT_SECRET || 'c7noticias_super_secreta_jwt_key_12345';
+      jwt.verify(token, jwtSecret);
       res.json({ autenticado: true });
     } catch (err) {
       return res.status(401).json({ autenticado: false });
