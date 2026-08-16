@@ -6,22 +6,6 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/database');
 const User = require('./models/User');
 
-async function garantirAdminPadrao() {
-  try {
-    const adminExistente = await User.findOne({ usuario: 'admin' });
-    if (!adminExistente) {
-      await User.create({
-        usuario: 'admin',
-        senha: 'admin123',
-        email: 'admin@c7noticias.com',
-      });
-      console.log('Usuário admin criado (usuario: admin / senha: admin123)');
-    }
-  } catch (erro) {
-    console.error('Erro ao garantir usuário admin:', erro.message);
-  }
-}
-
 const app = express();
 app.set('trust proxy', 1);
 
@@ -65,7 +49,6 @@ const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
     await connectDB();
-    await garantirAdminPadrao();
 
     app.listen(PORT, () => {
       console.log(`Servidor rodando na porta ${PORT}`);

@@ -25,6 +25,7 @@ exports.obterParaAdmin = async (req, res) => {
   try {
     const noticias = await Noticia.find({})
       .sort({ createdAt: -1 })
+      .select('-conteudo -foto')
       .lean();
     // Admin precisa de dados sempre frescos
     res.set('Cache-Control', 'no-store');

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // GET todos os usuários
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const usuarios = await User.find().select('-senha').sort({ createdAt: -1 });
     res.json(usuarios);
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST novo usuário
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { usuario, email, senha, ativo } = req.body;
 
@@ -37,7 +38,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT atualizar usuário
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { usuario, email, senha, ativo } = req.body;
@@ -73,7 +74,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE deletar usuário
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 

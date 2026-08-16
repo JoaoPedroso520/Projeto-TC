@@ -2145,7 +2145,7 @@
                     <div class="menu-categorias" id="menu-categorias"></div>
                     <div class="busca-container">
                         <input type="text" id="buscaInput" placeholder="Buscar notícias..." aria-label="Buscar notícias"
-                            oninput="atualizarBotaoLimparBusca()"
+                            oninput="atualizarBotaoLimparBusca(); liveSearch()"
                             onkeypress="if(event.key==='Enter') fazerBusca()">
                         <button class="busca-limpar" id="buscaLimparBtn" type="button" aria-label="Limpar busca"
                             onclick="limparBusca()">
@@ -2356,7 +2356,8 @@
     </footer>
 
     <script>
-        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
         const anunciosIntervalos = {};
         const CACHE_TTL_MS = 5 * 60 * 1000;
         const NOTICIAS_CACHE_PREFIX = 'c7-noticias-cache:';
@@ -2457,7 +2458,8 @@
 
             if (!/^https?:\/\//i.test(original)) return original;
 
-            return original;
+            // Usa um proxy rápido e moderno (wsrv.nl) para otimizar imagens de links externos
+            return `https://wsrv.nl/?url=${encodeURIComponent(original)}&w=${largura}&q=${qualidade}&output=webp`;
         }
 
         function imagemResponsiva(url, larguraPequena, larguraGrande, qualidade = 65) {
@@ -2993,7 +2995,15 @@
         }
 
         // BUSCA
-        async function fazerBusca() {
+        let searchTimeout;
+        function liveSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fazerBusca(true);
+            }, 400); // 400ms de delay (debounce)
+        }
+
+        async function fazerBusca(isLive = false) {
             const termo = document.getElementById('buscaInput').value.trim();
             if (!termo) {
                 carregarTodas();
@@ -3013,9 +3023,11 @@
                 const noticias = await res.json();
                 setCache(cacheKey, noticias);
                 exibir(noticias);
-                document.getElementById('buscaInput').value = '';
+                
                 atualizarBotaoLimparBusca();
-                fecharMenuMobile();
+                if (!isLive) {
+                    fecharMenuMobile();
+                }
             } catch (e) {
                 console.warn('Erro na busca:', e);
             }
@@ -3433,7 +3445,7 @@
         });
 
 
-        // ESPORTES - Todos os times do futebol brasileiro (Série A + B) via ESPN
+        // ESPORTES - Todos os times do futebol brasileiro (Série A + B) do site ESPN
         const timesBrasileiros = [
             { id: '624', nome: 'Argélia', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/alg.png', tipo: 'World Cup' },
             { id: '202', nome: 'Argentina', escudo: 'https://a.espncdn.com/i/teamlogos/countries/500/arg.png', tipo: 'World Cup' },
@@ -4226,7 +4238,12 @@
         if (originalExibir) {
             exibir = function(noticias) {
                 originalExibir(noticias);
-                if (noticias && noticias.length > 0) {
+
+                const buscaInput = document.getElementById('buscaInput');
+                const isBusca = buscaInput && buscaInput.value.trim() !== '';
+                const isCategoria = window.categoriaAtualLoop && window.categoriaAtualLoop !== '';
+
+                if (noticias && noticias.length > 0 && !isBusca && !isCategoria) {
                     // Simular notificação da notícia mais recente se ela for nova (baseado na data)
                     const maisRecente = noticias[0];
                     const chaveVisto = 'c7-last-news-seen';
@@ -4268,7 +4285,7 @@
                         carregarTodas(true);
                     }
                 }
-            }, 2000); // 2 segundos
+            }, 5000); // 5 segundos
         });
     </script>
 </body>

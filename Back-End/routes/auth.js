@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 // Login
 router.post('/login', async (req, res) => {
@@ -29,8 +30,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ erro: 'Usuário ou senha inválidos' });
     }
 
-    // Criar token simples (em produção, usar JWT)
-    const token = crypto.randomBytes(32).toString('hex');
+    // Criar JWT real
+    const payload = { user: { id: user.id } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '12h' });
 
     res.json({
       sucesso: true,
@@ -52,8 +54,12 @@ router.post('/verificar', (req, res) => {
       return res.status(401).json({ autenticado: false });
     }
 
-    // Aqui você implementaria verificação real do JWT
-    res.json({ autenticado: true });
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+      res.json({ autenticado: true });
+    } catch (err) {
+      return res.status(401).json({ autenticado: false });
+    }
   } catch (erro) {
     res.status(500).json({ erro: 'Erro no servidor' });
   }

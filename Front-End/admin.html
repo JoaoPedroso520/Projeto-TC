@@ -1119,7 +1119,26 @@
 
     <script>
         // API Local forçada removida - sempre aponta para produção para evitar confusão de banco
-        const API_URL = 'https://c7-noticias-backend.onrender.com/api';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+        const API_URL = isLocal ? 'http://localhost:5000/api' : 'https://c7-noticias-backend.onrender.com/api';
+
+        async function fetchAuth(url, options = {}) {
+            const tokenData = localStorage.getItem('adminToken');
+            const token = tokenData ? JSON.parse(tokenData).token : '';
+            if (!options.headers) options.headers = {};
+            // Só adiciona se não for um FormData (o browser cuida do Content-Type no FormData)
+            if (!(options.body instanceof FormData) && !options.headers['Content-Type']) {
+                options.headers['Content-Type'] = 'application/json';
+            }
+            options.headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(url, options);
+            if (res.status === 401 || res.status === 403) {
+                deslogar(true);
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+            return res;
+        }
+
         let confirmCallback = null;
         let usuarioAutenticado = null;
 
@@ -1384,7 +1403,7 @@
         async function carregarNoticias() {
             try {
                 // Puxar do novo endpoint admin que traz todas sem restrição
-                const res = await fetch(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/noticias/admin/todas?t=${Date.now()}`, { cache: 'no-store' });
                 const noticias = await res.json();
                 
                 const notStr = JSON.stringify(noticias);
@@ -1525,7 +1544,7 @@
             }
 
             try {
-                const res = await fetch(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
+                const res = await fetchAuth(id ? `${API_URL}/noticias/${id}` : `${API_URL}/noticias`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1553,7 +1572,7 @@
 
         async function deletarNoticia(id) {
             try {
-                const res = await fetch(`${API_URL}/noticias/${id}`, { method: 'DELETE' });
+                const res = await fetchAuth(`${API_URL}/noticias/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     showNotification('Notícia deletada!', 'success');
                     carregarNoticias();
@@ -1568,7 +1587,7 @@
         // ==== ANÚNCIOS ====
         async function carregarAnuncios() {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/anuncios/admin/todos?t=${Date.now()}`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 
                 const anStr = JSON.stringify(anuncios);
@@ -1629,7 +1648,7 @@
 
         async function editarAnuncio(id) {
             try {
-                const res = await fetch(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/anuncios/admin/todos`, { cache: 'no-store' });
                 const anuncios = await res.json();
                 const a = anuncios.find(x => x._id === id);
 
@@ -1689,7 +1708,7 @@
             }
 
             try {
-                const res = await fetch(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
+                const res = await fetchAuth(id ? `${API_URL}/anuncios/${id}` : `${API_URL}/anuncios`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1717,7 +1736,7 @@
 
         async function deletarAnuncio(id) {
             try {
-                const res = await fetch(`${API_URL}/anuncios/${id}`, { method: 'DELETE' });
+                const res = await fetchAuth(`${API_URL}/anuncios/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     showNotification('Anúncio deletado!', 'success');
                     carregarAnuncios();
@@ -1755,7 +1774,7 @@
             if (!nome) return;
 
             try {
-                const res = await fetch(id ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`, {
+                const res = await fetchAuth(id ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome })
@@ -1777,7 +1796,7 @@
         function deletarCategoria(id, nome) {
             showConfirmation(`Deletar categoria "${nome}"?`, async () => {
                 try {
-                    const res = await fetch(`${API_URL}/categorias/${id}`, { method: 'DELETE' });
+                    const res = await fetchAuth(`${API_URL}/categorias/${id}`, { method: 'DELETE' });
                     if (res.ok) {
                         showNotification('Categoria deletada!', 'success');
                         carregarCategorias();
@@ -1809,7 +1828,7 @@
             if (!nome) return;
 
             try {
-                const res = await fetch(`${API_URL}/categorias`, {
+                const res = await fetchAuth(`${API_URL}/categorias`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome })
@@ -1832,7 +1851,7 @@
         // ==== USUÁRIOS ====
         async function carregarUsuarios() {
             try {
-                const res = await fetch(`${API_URL}/usuarios`, { cache: 'no-store' });
+                const res = await fetchAuth(`${API_URL}/usuarios`, { cache: 'no-store' });
                 const usuarios = await res.json();
                 const tbody = document.getElementById('usuariosTabela');
 
@@ -1898,7 +1917,7 @@
             };
 
             try {
-                const res = await fetch(id ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`, {
+                const res = await fetchAuth(id ? `${API_URL}/usuarios/${id}` : `${API_URL}/usuarios`, {
                     method: id ? 'PUT' : 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
@@ -1923,7 +1942,7 @@
         function deletarUsuario(id, usuario) {
             showConfirmation(`Deletar administrador "${usuario}"?`, async () => {
                 try {
-                    const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+                    const res = await fetchAuth(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
                     const data = await res.json().catch(() => ({}));
                     
                     if (res.ok) {

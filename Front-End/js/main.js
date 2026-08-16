@@ -50,7 +50,8 @@ function otimizarImagem(url, largura = 600, qualidade = 65) {
 
     if (!/^https?:\/\//i.test(original)) return original;
 
-    // Retorna a URL original diretamente para evitar a lentidão do proxy weserv.nl
+    // Retornamos a imagem original diretamente. O proxy wsrv.nl foi removido 
+    // porque estava bloqueando links locais (localhost) ou instáveis.
     return original;
 }
 
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarAnuncios();
     setupEventListeners();
     
-    // Auto-Refresh a cada 1 segundo (quase instantâneo)
+    // Auto-Refresh a cada 30 segundos (evita lentidão e travamentos no mobile)
     setInterval(() => {
         if (categoriaAtual) {
             carregarNoticiasPorCategoria(categoriaAtual, true);
@@ -79,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carregarNoticias(true);
         }
         carregarAnuncios(true);
-    }, 1000);
+    }, 30000);
 });
 
 // Setup de Event Listeners

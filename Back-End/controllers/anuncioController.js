@@ -106,7 +106,7 @@ exports.registrarClique = async (req, res) => {
 // Obter todos os anúncios (Admin)
 exports.obterTodos = async (req, res) => {
   try {
-    const anuncios = await Anuncio.find().sort({ createdAt: -1 });
+    const anuncios = await Anuncio.find().sort({ createdAt: -1 }).select('-foto');
     res.json(anuncios);
   } catch (error) {
     res.status(500).json({ erro: error.message });
